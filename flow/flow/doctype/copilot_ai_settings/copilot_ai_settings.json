@@ -1,0 +1,146 @@
+{
+ "actions": [],
+ "creation": "2026-09-03 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "block_on_zero_credits",
+  "column_break_credits",
+  "default_user_credits",
+  "section_break_costs",
+  "cost_per_chat",
+  "cost_per_tool",
+  "column_break_costs",
+  "cost_per_rag",
+  "cost_per_proposal",
+  "section_break_qdrant",
+  "qdrant_url",
+  "qdrant_collection",
+  "column_break_qdrant",
+  "qdrant_api_key"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "default": "1",
+   "description": "Block requests when user has zero or negative credit balance",
+   "fieldname": "block_on_zero_credits",
+   "fieldtype": "Check",
+   "label": "Block on Zero Credits"
+  },
+  {
+   "fieldname": "column_break_credits",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "100.0",
+   "description": "Initial credit balance assigned to new CRM users",
+   "fieldname": "default_user_credits",
+   "fieldtype": "Float",
+   "label": "Default User Credits",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_break_costs",
+   "fieldtype": "Section Break",
+   "label": "Credit Consumption Rates"
+  },
+  {
+   "default": "1.0",
+   "description": "Credits debited per chat turn",
+   "fieldname": "cost_per_chat",
+   "fieldtype": "Float",
+   "label": "Cost per Chat Turn",
+   "precision": "2"
+  },
+  {
+   "default": "0.5",
+   "description": "Credits debited per tool execution",
+   "fieldname": "cost_per_tool",
+   "fieldtype": "Float",
+   "label": "Cost per Tool Execution",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_costs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1.5",
+   "description": "Credits debited per semantic RAG search in Qdrant",
+   "fieldname": "cost_per_rag",
+   "fieldtype": "Float",
+   "label": "Cost per RAG Search",
+   "precision": "2"
+  },
+  {
+   "default": "2.0",
+   "description": "Credits debited per commercial proposal generated",
+   "fieldname": "cost_per_proposal",
+   "fieldtype": "Float",
+   "label": "Cost per Proposal PDF",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_break_qdrant",
+   "fieldtype": "Section Break",
+   "label": "Qdrant Vector Database"
+  },
+  {
+   "default": "http://localhost:6333",
+   "description": "Qdrant REST API URL (e.g. http://localhost:6333 or cloud URL)",
+   "fieldname": "qdrant_url",
+   "fieldtype": "Data",
+   "label": "Qdrant URL"
+  },
+  {
+   "default": "crm_knowledge",
+   "description": "Name of the Qdrant collection for CRM notes, call transcripts, and emails",
+   "fieldname": "qdrant_collection",
+   "fieldtype": "Data",
+   "label": "Qdrant Collection"
+  },
+  {
+   "fieldname": "column_break_qdrant",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional API Key for Qdrant Cloud or protected instance",
+   "fieldname": "qdrant_api_key",
+   "fieldtype": "Password",
+   "label": "Qdrant API Key"
+  }
+ ],
+ "issingle": 1,
+ "modified": "2026-09-03 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Flow",
+ "name": "Copilot AI Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
+  },
+  {
+   "read": 1,
+   "role": "Sales User"
+  }
+ ]
+}
