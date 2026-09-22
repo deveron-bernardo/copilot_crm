@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "autoname": "field:workspace",
+ "creation": "2026-09-21 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "workspace",
+  "credit_balance",
+  "column_break_main",
+  "total_consumed",
+  "status",
+  "section_break_timestamps",
+  "last_recharge",
+  "column_break_timestamps",
+  "last_deduction"
+ ],
+ "fields": [
+  {
+   "fieldname": "workspace",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Workspace Identifier",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1000.0",
+   "description": "Shared credit pool available for all seats in this workspace",
+   "fieldname": "credit_balance",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Available Credit Balance",
+   "precision": "2",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0.0",
+   "fieldname": "total_consumed",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Credits Consumed",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nExhausted\nSuspended"
+  },
+  {
+   "fieldname": "section_break_timestamps",
+   "fieldtype": "Section Break",
+   "label": "Timestamps"
+  },
+  {
+   "fieldname": "last_recharge",
+   "fieldtype": "Datetime",
+   "label": "Last Recharge At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_timestamps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_deduction",
+   "fieldtype": "Datetime",
+   "label": "Last Deduction At",
+   "read_only": 1
+  }
+ ],
+ "modified": "2026-09-21 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Flow",
+ "name": "Deveron AI Workspace Balance",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
+  }
+ ]
+}

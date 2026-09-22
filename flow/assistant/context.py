@@ -138,7 +138,24 @@ def build_active_record_summary(doctype: str | None, docname: str | None) -> str
 	if notes:
 		lines.append("Notas Recentes:")
 		for n in notes:
-			lines.append(f"  - ({n.creation.strftime('%d/%m')}) {n.title or 'Nota'}: {n.content[:200]}")
+			note_text = (n.content or "").strip()[:200]
+			note_date = n.creation.strftime("%d/%m") if hasattr(n.creation, "strftime") else str(n.creation or "")[:10]
+			lines.append(f"  - ({note_date}) {n.title or 'Nota'}: {note_text}")
+
+	# Anexar últimos comentários (Comment)
+	comments = frappe.get_list(
+		"Comment",
+		filters={"reference_doctype": doctype, "reference_name": docname, "comment_type": "Comment"},
+		fields=["content", "comment_by", "creation"],
+		order_by="creation desc",
+		limit=3,
+	)
+	if comments:
+		lines.append("Comentários Recentes:")
+		for c in comments:
+			c_text = (c.content or "").strip()[:200]
+			c_date = c.creation.strftime("%d/%m") if hasattr(c.creation, "strftime") else str(c.creation or "")[:10]
+			lines.append(f"  - ({c_date}) {c.comment_by or 'Usuário'}: {c_text}")
 
 	lines.append("======================================================")
 	lines.append(

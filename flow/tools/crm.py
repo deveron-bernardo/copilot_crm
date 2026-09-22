@@ -86,8 +86,13 @@ def bulk_update_records(
 	if doctype not in allowed_doctypes:
 		raise ValueError(f"Edição em lote permitida apenas para: {', '.join(allowed_doctypes)}")
 
+	from flow.tools.builtins import normalize_record_values
+
+	norm_update_values = normalize_record_values(doctype, update_values, is_create=False)
+	norm_filters = normalize_record_values(doctype, filters, is_create=False) if isinstance(filters, dict) else filters
+
 	limit = min(max(int(limit), 1), 100)
-	records = frappe.get_list(doctype, filters=filters, pluck="name", limit=limit)
+	records = frappe.get_list(doctype, filters=norm_filters, pluck="name", limit=limit)
 
 	if not records:
 		return {"status": "no_records_found", "updated_count": 0, "records": []}
@@ -102,7 +107,7 @@ def bulk_update_records(
 
 		try:
 			doc = frappe.get_doc(doctype, name)
-			for field, val in update_values.items():
+			for field, val in norm_update_values.items():
 				doc.set(field, val)
 			doc.save()
 			updated.append(name)
@@ -119,6 +124,89 @@ def bulk_update_records(
 
 
 @tool
+def add_crm_comment(
+	content: str,
+	reference_doctype: str,
+	reference_docname: str,
+) -> dict[str, Any]:
+	"""Adiciona um comentário diretamente na linha do tempo / histórico (Atividade e Comentários) de um Lead, Deal ou outro registro do CRM.
+
+	Use esta ferramenta SEMPRE que o usuário pedir para comentar, adicionar observação ou registrar uma mensagem no histórico do lead ou deal:
+	- 'adicione um comentário...'
+	- 'crie um comentário: ...'
+	- 'comente no lead...'
+	- 'registre esse recado no documento...'
+	NÃO use manage_crm_task para comentários! Tarefas criam pendências com prazos (due_date) e responsáveis, enquanto comentários registram anotações no histórico do documento.
+	"""
+	if not reference_doctype or not reference_docname:
+		raise ValueError("reference_doctype e reference_docname são obrigatórios para adicionar comentário.")
+	if not content:
+		raise ValueError("Conteúdo do comentário não pode ser vazio.")
+
+	if not frappe.has_permission(reference_doctype, "read", reference_docname):
+		raise PermissionError(f"Sem permissão para acessar o {reference_doctype} {reference_docname}")
+
+	try:
+		from crm.api.comment import add_comment
+
+		comment = add_comment(
+			reference_doctype=reference_doctype,
+			reference_name=reference_docname,
+			content=content,
+		)
+		comment_name = getattr(comment, "name", str(comment))
+	except Exception:
+		from frappe.desk.form.utils import add_comment as frappe_add_comment
+		from frappe.utils import get_fullname
+
+		comment = frappe_add_comment(
+			reference_doctype,
+			reference_docname,
+			content,
+			comment_email=frappe.session.user,
+			comment_by=get_fullname(frappe.session.user),
+		)
+		comment_name = getattr(comment, "name", str(comment))
+
+	return {
+		"status": "created",
+		"comment_id": comment_name,
+		"reference_doctype": reference_doctype,
+		"reference_docname": reference_docname,
+		"content": content,
+		"message": f"Comentário registrado com sucesso no {reference_doctype} '{reference_docname}'.",
+	}
+
+
+@tool
+def add_crm_note(
+	title: str,
+	content: str | None = None,
+	reference_doctype: str | None = None,
+	reference_docname: str | None = None,
+) -> dict[str, Any]:
+	"""Cria uma anotação estruturada na aba 'Anotações' (FCRM Note) vinculada a um Lead, Deal ou Organização."""
+	if not title:
+		raise ValueError("Título da anotação é obrigatório.")
+
+	doc = frappe.new_doc("FCRM Note")
+	doc.title = title
+	doc.content = content or ""
+	doc.reference_doctype = reference_doctype
+	doc.reference_docname = reference_docname
+	doc.insert()
+
+	return {
+		"status": "created",
+		"note_id": doc.name,
+		"title": doc.title,
+		"reference_doctype": reference_doctype,
+		"reference_docname": reference_docname,
+		"message": f"Anotação '{title}' criada com sucesso.",
+	}
+
+
+@tool
 def manage_crm_task(
 	action: Literal["create", "update", "list", "complete"],
 	title: str | None = None,
@@ -131,9 +219,12 @@ def manage_crm_task(
 	assigned_to: str | None = None,
 	description: str | None = None,
 ) -> dict[str, Any]:
-	"""Gerencia tarefas (CRM Task) vinculadas a leads, oportunidades (deals) ou contas.
+	"""Gerencia tarefas operacionais (CRM Task) com status (Todo, In Progress, Done) e prazos (due_date).
 
-	Use para agendar ligações, reuniões, envio de propostas ou prazos de acompanhamento.
+	ATENÇÃO: NUNCA USE ESTA FERRAMENTA PARA COMENTÁRIOS OU ANOTAÇÕES!
+	- Para comentários na linha do tempo / atividade, use `add_crm_comment`.
+	- Para anotações na aba Anotações, use `add_crm_note`.
+	Use `manage_crm_task` exclusivamente para pendências e compromissos operacionais (ex: 'agendar ligação', 'marcar reunião', 'criar tarefa de follow-up').
 	"""
 	if action == "create":
 		if not title:
@@ -407,6 +498,8 @@ def summarize_call_log(call_log_name: str, auto_create_tasks: bool = False) -> d
 def build_crm_tools() -> list[Tool]:
 	"""Return the suite of specialized Frappe CRM tools."""
 	return [
+		add_crm_comment,
+		add_crm_note,
 		convert_lead,
 		bulk_update_records,
 		manage_crm_task,

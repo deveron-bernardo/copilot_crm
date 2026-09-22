@@ -32,6 +32,142 @@ def _summarize_values(values: dict) -> str:
 	return json.dumps(display, indent=2, default=str, ensure_ascii=False)
 
 
+LEAD_STATUS_MAP = {
+	"novo": "New", "nova": "New", "new": "New", "aberto": "New", "aberta": "New", "open": "New",
+	"contatado": "Contacted", "contatada": "Contacted", "contacted": "Contacted",
+	"nutrição": "Nurture", "nutricao": "Nurture", "nurture": "Nurture", "em nutrição": "Nurture", "em nutricao": "Nurture",
+	"qualificado": "Qualified", "qualificada": "Qualified", "qualified": "Qualified",
+	"convertido": "Converted", "convertida": "Converted", "converted": "Converted",
+	"desqualificado": "Unqualified", "desqualificada": "Unqualified", "não qualificado": "Unqualified", "nao qualificado": "Unqualified", "unqualified": "Unqualified",
+	"lixo": "Junk", "descarte": "Junk", "junk": "Junk", "spam": "Junk",
+}
+
+DEAL_STATUS_MAP = {
+	"qualificação": "Qualification", "qualificacao": "Qualification", "qualification": "Qualification",
+	"demo": "Demo/Making", "demonstração": "Demo/Making", "demonstracao": "Demo/Making", "demo/making": "Demo/Making",
+	"proposta": "Proposal/Quotation", "cotação": "Proposal/Quotation", "cotacao": "Proposal/Quotation", "proposta/cotação": "Proposal/Quotation", "proposal": "Proposal/Quotation", "quotation": "Proposal/Quotation", "proposal/quotation": "Proposal/Quotation",
+	"negociação": "Negotiation", "negociacao": "Negotiation", "negotiation": "Negotiation",
+	"pronto para fechar": "Ready to Close", "fechamento": "Ready to Close", "ready to close": "Ready to Close",
+	"ganho": "Won", "ganha": "Won", "ganhou": "Won", "fechado ganho": "Won", "won": "Won",
+	"perdido": "Lost", "perdida": "Lost", "perdeu": "Lost", "fechado perdido": "Lost", "lost": "Lost",
+}
+
+TASK_STATUS_MAP = {
+	"backlog": "Backlog",
+	"a fazer": "Todo", "pendente": "Todo", "para fazer": "Todo", "todo": "Todo",
+	"em progresso": "In Progress", "em andamento": "In Progress", "in progress": "In Progress",
+	"concluído": "Done", "concluido": "Done", "concluída": "Done", "concluida": "Done", "feito": "Done", "feita": "Done", "done": "Done",
+	"cancelado": "Cancelled", "cancelada": "Cancelled", "cancelled": "Cancelled", "canceled": "Cancelled",
+}
+
+
+def normalize_record_values(doctype: str, values: dict[str, Any], is_create: bool = False) -> dict[str, Any]:
+	"""Normalize localized field aliases and enum/link status values for CRM DocTypes."""
+	if not isinstance(values, dict):
+		return values
+	vals = dict(values)
+
+	if doctype == "CRM Lead":
+		raw_status = vals.get("status")
+		if isinstance(raw_status, str):
+			norm = LEAD_STATUS_MAP.get(raw_status.strip().lower())
+			if norm:
+				vals["status"] = norm
+		elif is_create and not vals.get("status"):
+			vals["status"] = "New"
+
+		if not vals.get("first_name"):
+			full = vals.get("lead_name") or vals.get("full_name") or vals.get("nome")
+			if full and isinstance(full, str):
+				parts = full.strip().split(None, 1)
+				vals["first_name"] = parts[0]
+				if len(parts) > 1 and not vals.get("last_name"):
+					vals["last_name"] = parts[1]
+
+		for k in ("empresa", "company"):
+			if k in vals:
+				if "organization" not in vals:
+					vals["organization"] = vals[k]
+				del vals[k]
+
+		if "email_id" in vals and "email" not in vals:
+			vals["email"] = vals.pop("email_id")
+		if "whatsapp" in vals and "mobile_no" not in vals:
+			vals["mobile_no"] = vals.pop("whatsapp")
+		if "phone" in vals and "mobile_no" not in vals:
+			vals["mobile_no"] = vals.pop("phone")
+
+	elif doctype == "CRM Deal":
+		raw_status = vals.get("status")
+		if isinstance(raw_status, str):
+			norm = DEAL_STATUS_MAP.get(raw_status.strip().lower())
+			if norm:
+				vals["status"] = norm
+		elif is_create and not vals.get("status"):
+			vals["status"] = "Qualification"
+
+		if not vals.get("title"):
+			for k in ("deal_name", "deal_title", "nome", "name"):
+				if vals.get(k):
+					vals["title"] = vals[k]
+					break
+
+		for k in ("empresa", "company"):
+			if k in vals:
+				if "organization" not in vals:
+					vals["organization"] = vals[k]
+				del vals[k]
+
+	elif doctype == "Contact":
+		if not vals.get("first_name"):
+			full = vals.get("full_name") or vals.get("nome") or vals.get("contact_name")
+			if full and isinstance(full, str):
+				parts = full.strip().split(None, 1)
+				vals["first_name"] = parts[0]
+				if len(parts) > 1 and not vals.get("last_name"):
+					vals["last_name"] = parts[1]
+
+		for k in ("organization", "organization_name", "empresa", "company"):
+			if k in vals:
+				if "company_name" not in vals:
+					vals["company_name"] = vals[k]
+				del vals[k]
+
+		if "email" in vals and "email_id" not in vals:
+			vals["email_id"] = vals.pop("email")
+		if "whatsapp" in vals and "mobile_no" not in vals:
+			vals["mobile_no"] = vals.pop("whatsapp")
+
+	elif doctype == "CRM Organization":
+		if not vals.get("organization_name"):
+			for k in ("name", "empresa", "company", "nome"):
+				if vals.get(k):
+					vals["organization_name"] = vals[k]
+					break
+
+	elif doctype == "CRM Task":
+		raw_status = vals.get("status")
+		if isinstance(raw_status, str):
+			norm = TASK_STATUS_MAP.get(raw_status.strip().lower())
+			if norm:
+				vals["status"] = norm
+
+	elif doctype == "FCRM Note":
+		if not vals.get("title"):
+			content_preview = vals.get("content") or vals.get("note") or "Nota"
+			vals["title"] = str(content_preview)[:60].strip()
+		if "note" in vals and "content" not in vals:
+			vals["content"] = vals.pop("note")
+
+	elif doctype == "Comment":
+		if not vals.get("comment_type"):
+			vals["comment_type"] = "Comment"
+		if "reference_docname" in vals and "reference_name" not in vals:
+			vals["reference_name"] = vals.pop("reference_docname")
+
+	return vals
+
+
 @tool
 def find_doctypes(search: str | None = None, module: str | None = None, limit: int = 40) -> list[dict]:
 	"""Find exact DocType names before describe/read — never guess names.
@@ -159,6 +295,14 @@ def read(
 			for org_key in ("organization", "empresa", "company"):
 				if org_key in normalized_filters:
 					normalized_filters["organization_name"] = normalized_filters.pop(org_key)
+
+	if isinstance(normalized_filters, dict) and "status" in normalized_filters and isinstance(normalized_filters["status"], str):
+		if doctype == "CRM Lead":
+			normalized_filters["status"] = LEAD_STATUS_MAP.get(normalized_filters["status"].strip().lower(), normalized_filters["status"])
+		elif doctype == "CRM Deal":
+			normalized_filters["status"] = DEAL_STATUS_MAP.get(normalized_filters["status"].strip().lower(), normalized_filters["status"])
+		elif doctype == "CRM Task":
+			normalized_filters["status"] = TASK_STATUS_MAP.get(normalized_filters["status"].strip().lower(), normalized_filters["status"])
 
 	records = frappe.get_list(
 		doctype,
@@ -460,8 +604,9 @@ def create(doctype: str, records: list[dict[str, Any]]) -> dict[str, Any]:
 	failures: list[dict[str, Any]] = []
 	for row, values in enumerate(records):
 		try:
+			norm_vals = normalize_record_values(doctype, values or {}, is_create=True)
 			doc = frappe.new_doc(doctype)
-			doc.update(values or {})
+			doc.update(norm_vals)
 			doc.insert()
 			created.append(doc.name)
 		except Exception as e:
@@ -488,12 +633,13 @@ def update(doctype: str, names: list[str], values: dict[str, Any]) -> dict[str, 
 	"""Apply the same field values to one or more existing records. Runs full validation per record."""
 	updated: list[str] = []
 	failures: list[dict[str, Any]] = []
+	norm_vals = normalize_record_values(doctype, values or {}, is_create=False)
 	for name in names:
 		try:
 			if not frappe.has_permission(doctype, "write", name):
 				raise frappe.PermissionError(_("No permission to update {0} {1}.").format(doctype, name))
 			doc = frappe.get_doc(doctype, name)
-			doc.update(values or {})
+			doc.update(norm_vals)
 			doc.save()
 			updated.append(doc.name)
 		except Exception as e:
@@ -577,6 +723,8 @@ def run_action(
 
 
 from flow.tools.crm import (
+	add_crm_comment,
+	add_crm_note,
 	bulk_update_records,
 	convert_lead,
 	generate_deal_proposal,
@@ -599,6 +747,8 @@ BUILTIN_TOOLS: list[Tool] = [
 	run_action,
 	execute,
 	# Specialized Frappe CRM Tools
+	add_crm_comment,
+	add_crm_note,
 	convert_lead,
 	bulk_update_records,
 	manage_crm_task,
@@ -639,3 +789,5 @@ def sync_builtin_tools() -> None:
 					"requires_confirmation": int(builtin.requires_confirmation),
 				}
 			).insert(ignore_permissions=True)
+	frappe.db.commit()
+

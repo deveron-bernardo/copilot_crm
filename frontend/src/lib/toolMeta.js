@@ -41,6 +41,9 @@ const LABELS = {
 	update: "Updating Records",
 	delete: "Deleting Records",
 	run_action: "Running Document Actions",
+	add_crm_comment: "Adding Comment",
+	add_crm_note: "Adding Note",
+	manage_crm_task: "Managing Task",
 };
 
 export function toolLabel(name) {

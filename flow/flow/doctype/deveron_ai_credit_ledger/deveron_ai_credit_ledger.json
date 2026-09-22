@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "autoname": "format:DCL-{YYYY}-{MM}-{#####}",
+ "creation": "2026-09-21 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "workspace",
+  "posting_datetime",
+  "column_break_main",
+  "feature",
+  "credits",
+  "balance_after",
+  "workspace_balance_after",
+  "section_break_usage",
+  "tokens_prompt",
+  "tokens_completion",
+  "column_break_usage",
+  "reference_session",
+  "reference_run",
+  "section_break_details",
+  "details"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User / Cadeira",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "default",
+   "fieldname": "workspace",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Workspace",
+   "reqd": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "posting_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Posting Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "feature",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Feature",
+   "options": "Chat\nTool Execution\nSemantic Search (RAG)\nProposal Generation\nCredit Recharge\nCustom\nOther",
+   "reqd": 1
+  },
+  {
+   "description": "Negative for deduction, positive for recharge",
+   "fieldname": "credits",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Credits",
+   "precision": "2",
+   "reqd": 1
+  },
+  {
+   "fieldname": "balance_after",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "User Balance After",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "workspace_balance_after",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Workspace Balance After",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_usage",
+   "fieldtype": "Section Break",
+   "label": "Token Usage & References"
+  },
+  {
+   "default": "0",
+   "fieldname": "tokens_prompt",
+   "fieldtype": "Int",
+   "label": "Prompt Tokens",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "tokens_completion",
+   "fieldtype": "Int",
+   "label": "Completion Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_usage",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_session",
+   "fieldtype": "Link",
+   "label": "Reference Session",
+   "options": "Flow Session"
+  },
+  {
+   "fieldname": "reference_run",
+   "fieldtype": "Link",
+   "label": "Reference Run",
+   "options": "Flow Run"
+  },
+  {
+   "fieldname": "section_break_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Small Text",
+   "label": "Details"
+  }
+ ],
+ "modified": "2026-09-21 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Flow",
+ "name": "Deveron AI Credit Ledger",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
+  },
+  {
+   "read": 1,
+   "role": "Sales User"
+  }
+ ]
+}

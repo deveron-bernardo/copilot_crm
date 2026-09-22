@@ -8,6 +8,8 @@
   "block_on_zero_credits",
   "column_break_credits",
   "default_user_credits",
+  "default_workspace_credits",
+  "workspace_credit_balance",
   "section_break_costs",
   "cost_per_chat",
   "cost_per_tool",
@@ -44,6 +46,22 @@
    "fieldname": "default_user_credits",
    "fieldtype": "Float",
    "label": "Default User Credits",
+   "precision": "2"
+  },
+  {
+   "default": "1000.0",
+   "description": "Initial credit balance allocated to shared workspaces",
+   "fieldname": "default_workspace_credits",
+   "fieldtype": "Float",
+   "label": "Default Workspace Credits",
+   "precision": "2"
+  },
+  {
+   "default": "1000.0",
+   "description": "Current default workspace shared credit balance",
+   "fieldname": "workspace_credit_balance",
+   "fieldtype": "Float",
+   "label": "Workspace Credit Balance",
    "precision": "2"
   },
   {
