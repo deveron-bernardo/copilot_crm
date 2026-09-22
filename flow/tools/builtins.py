@@ -95,7 +95,7 @@ def read(
 	When displaying records to the user:
 	- For CRM Lead: The person's name is in `lead_name` / `full_name`. The company is in `organization` / `empresa`. Never say "Nome: CRM-LEAD-..."; say "Nome: [lead_name], Empresa: [organization], ID: [id]".
 	- For CRM Deal: The deal name/title is in `title`. The company is in `organization`.
-	- For Contact: The contact name is in `full_name` / `first_name` + `last_name`.
+	- For Contact: The contact name is in `full_name` / `first_name` + `last_name`. The organization is in `company_name` (or `organization`). Email is in `email_id` (or `email`).
 	- For CRM Task: The task name is in `title`.
 	"""
 	limit = min(max(int(limit), 1), MAX_READ_LIMIT)
@@ -135,13 +135,55 @@ def read(
 				if meta.has_field(key) and key not in fetch_fields:
 					fetch_fields.append(key)
 
+	# Normalize filters and field aliases for CRM DocTypes (Contact, Lead, Deal, Org)
+	normalized_filters = dict(filters) if isinstance(filters, dict) else filters
+	if doctype == "Contact":
+		if isinstance(normalized_filters, dict):
+			for org_key in ("organization", "organization_name", "empresa", "company"):
+				if org_key in normalized_filters:
+					normalized_filters["company_name"] = normalized_filters.pop(org_key)
+			if "email" in normalized_filters:
+				normalized_filters["email_id"] = normalized_filters.pop("email")
+		if fetch_fields:
+			fetch_fields = [
+				"company_name" if f in ("organization", "empresa", "company") else ("email_id" if f == "email" else f)
+				for f in fetch_fields
+			]
+	elif doctype in ("CRM Lead", "CRM Deal"):
+		if isinstance(normalized_filters, dict):
+			for org_key in ("empresa", "company"):
+				if org_key in normalized_filters:
+					normalized_filters["organization"] = normalized_filters.pop(org_key)
+	elif doctype == "CRM Organization":
+		if isinstance(normalized_filters, dict):
+			for org_key in ("organization", "empresa", "company"):
+				if org_key in normalized_filters:
+					normalized_filters["organization_name"] = normalized_filters.pop(org_key)
+
 	records = frappe.get_list(
 		doctype,
-		filters=filters,
+		filters=normalized_filters,
 		fields=fetch_fields,
 		limit=limit,
 		order_by=order_by,
 	)
+
+	# Dynamic Link fallback for Contact if company_name filter matched nothing
+	if not records and doctype == "Contact" and isinstance(normalized_filters, dict) and "company_name" in normalized_filters:
+		org_ref = normalized_filters["company_name"]
+		linked = frappe.get_all(
+			"Dynamic Link",
+			filters={"link_doctype": "CRM Organization", "link_name": org_ref, "parenttype": "Contact"},
+			pluck="parent",
+		)
+		if linked:
+			records = frappe.get_list(
+				doctype,
+				filters={"name": ["in", linked]},
+				fields=fetch_fields,
+				limit=limit,
+				order_by=order_by,
+			)
 
 	# Format/alias records clearly to disambiguate 'name' vs human name
 	for r in records:
@@ -163,6 +205,11 @@ def read(
 			full_name = f"{r.get('first_name') or ''} {r.get('last_name') or ''}".strip()
 			if full_name:
 				r["full_name"] = full_name
+			if r.get("company_name"):
+				r["organization"] = r["company_name"]
+				r["empresa"] = r["company_name"]
+			if r.get("email_id"):
+				r["email"] = r["email_id"]
 
 	return records
 

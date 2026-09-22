@@ -26,6 +26,11 @@ def _flow_panel_asset(filename: str) -> str:
 app_include_js = [_flow_panel_asset("flow_panel.js")]
 app_include_css = [_flow_panel_asset("flow_panel.css")]
 
+crm_include_js = [_flow_panel_asset("flow_panel.js")]
+crm_include_css = [_flow_panel_asset("flow_panel.css")]
+
+after_request = ["flow.boot.inject_flow_panel_into_crm"]
+
 doc_events = {
 	"*": {
 		"after_insert": "flow.triggers.dispatch",

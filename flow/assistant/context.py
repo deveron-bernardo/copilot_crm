@@ -85,6 +85,20 @@ def build_active_record_summary(doctype: str | None, docname: str | None) -> str
 		lines.append(f"Website: {getattr(doc, 'website', 'N/A')} | Setor: {getattr(doc, 'industry', 'N/A')}")
 		lines.append(f"Território: {getattr(doc, 'territory', 'N/A')}")
 
+		# Contatos vinculados à organização
+		org_contacts = frappe.get_list(
+			"Contact",
+			filters={"company_name": docname},
+			fields=["name", "first_name", "last_name", "email_id", "mobile_no"],
+			limit=5,
+		)
+		if org_contacts:
+			c_strs = [
+				f"{c.get('first_name', '')} {c.get('last_name', '')} ({c.get('email_id') or c.get('mobile_no') or c.name})".strip()
+				for c in org_contacts
+			]
+			lines.append(f"Contatos Vinculados: {'; '.join(c_strs)}")
+
 	elif doctype == "CRM Task":
 		lines.append(f"Tarefa: {getattr(doc, 'title', docname)}")
 		lines.append(f"Status: {getattr(doc, 'status', 'N/A')} | Prioridade: {getattr(doc, 'priority', 'Medium')}")

@@ -30,7 +30,7 @@ ASSISTANT_INSTRUCTIONS = (
 	"    - **ID:** CRM-LEAD-2026-00012\n"
 	"- No 'CRM Deal': O título da oportunidade é 'title', a empresa é 'organization' e o valor é 'annual_revenue' ou 'deal_value'.\n"
 	"- No 'CRM Organization': O nome da empresa é 'organization_name'.\n"
-	"- No 'Contact': O nome do contato é 'first_name' + 'last_name' ('full_name').\n"
+	"- No 'Contact': O nome do contato é 'first_name' + 'last_name' ('full_name'). A empresa/organização fica em 'company_name' (ou 'organization'). O e-mail fica em 'email_id' (ou 'email').\n"
 	"- No 'CRM Task': O título da tarefa é 'title'.\n\n"
 	"DOCUMENTOS PRINCIPAIS DO FRAPPE CRM:\n"
 	"- CRM Lead: Prospects que demonstraram interesse. Possui campos como status, lead_owner, source, email, mobile_no, organization, lead_name.\n"

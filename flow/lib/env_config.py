@@ -29,8 +29,10 @@ def load_env_file() -> None:
 		pass
 
 	# Standard locations
+	candidate_paths.append(Path(__file__).resolve().parents[2] / ".env")
 	candidate_paths.append(Path("/home/bernardo/frappe/my-bench/.env"))
 	candidate_paths.append(Path("/home/bernardo/frappe/my-bench/sites/.env"))
+	candidate_paths.append(Path("/home/bernardo/frappe/my-bench/apps/flow/.env"))
 	candidate_paths.append(Path("/home/bernardo/repos/copilot_crm/.env"))
 
 	for path in candidate_paths:

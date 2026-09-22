@@ -43,7 +43,7 @@ class FlowPanel {
 			right: "0",
 			width: this.fullscreen ? "100vw" : `${this._halfWidth}px`,
 			height: "100vh",
-			zIndex: "1040",
+			zIndex: "9999",
 			// A restored-open panel renders in place (no slide) so a refresh is seamless.
 			transform: this.visible ? "translateX(0)" : "translateX(100%)",
 			transition: "transform 0.22s ease",
@@ -118,12 +118,17 @@ class FlowPanel {
 
 	_registerShortcut() {
 		// 1. Universal keyboard listener for Ctrl+I and Cmd+I in any browser / SPA route
-		window.addEventListener("keydown", (e) => {
-			if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === "i") {
-				e.preventDefault();
-				this.toggle();
-			}
-		});
+		window.addEventListener(
+			"keydown",
+			(e) => {
+				if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === "i") {
+					e.preventDefault();
+					e.stopPropagation();
+					this.toggle();
+				}
+			},
+			true
+		);
 
 		// 2. Desk shortcut manager if available
 		if (window.frappe?.ui?.keys?.add_shortcut) {
@@ -148,7 +153,7 @@ class FlowPanel {
 			position: "fixed",
 			bottom: "20px",
 			right: "20px",
-			zIndex: "1030",
+			zIndex: "9990",
 			width: "44px",
 			height: "44px",
 			borderRadius: "50%",
@@ -215,6 +220,10 @@ class FlowPanel {
 
 function initPanel() {
 	if (window.__copilot_crm_initialized) return;
+	if (!document.body) {
+		document.addEventListener("DOMContentLoaded", initPanel);
+		return;
+	}
 	window.__copilot_crm_initialized = true;
 	if (!window.frappe) window.frappe = {};
 	window.frappe.flow = window.frappe.flow || {};
