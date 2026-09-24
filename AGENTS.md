@@ -159,9 +159,27 @@ graph TD
 - **Frontend Kanban (`Deals.vue`):**
   - Adicionado badge visual customizado com cores semânticas (`Good` $\rightarrow$ Verde, `Warning` $\rightarrow$ Âmbar, `Critical` $\rightarrow$ Vermelho) na exibição de cards do Kanban.
 - **Testes Unitários:**
-  - `crm/crm/tasks/tests/test_kanban_supervisor.py` (4/4 testes aprovados cobrindo cálculo de inatividade, transição de estagnação com nota explicativa e proteção para negócios Won/Lost).
+### H. Agente SDR por Voz em Tempo Real (Pipecat) — Task 5.3
+- **Mecanismo:** Pipeline full-duplex de voz em tempo real executando em container dedicado (`deveron-voice-sdr`) conectando Twilio Media Streams ao Pipecat com latência inferior a 1s:
+  - `Twilio Transport -> Deepgram STT (nova-2 pt-BR) -> LLM Worker (SDR Qualification) -> Cartesia TTS (Sonic pt-BR) -> Twilio Audio Out`.
+  - Ao concluir a ligação, a LLM consolida a transcrição e resumo estruturado, disparando um webhook POST assinado com HMAC-SHA256 para o CRM.
+- **Campos adicionados ao CRM Call Log (`crm_call_log.json` & `crm_call_log.py`):**
+  - `summary` (Small Text: resumo da qualificação), `transcript` (Long Text: transcrição integral da chamada), `reference_name` (Data: vínculo com o CRM Lead).
+  - Normalização flexível de `caller` e `receiver` para suportar tanto links de `User` quanto identificadores de telefonia / Caller IDs alfanuméricos (`"SDR Autônomo Deveron"`, números E.164).
+- **Módulo de Faturamento e Auditoria (`flow/flow/doctype/deveron_ai_credit_ledger/`):**
+  - Adicionado suporte a `credits_debited`, `credits_credited`, `reference_doctype`, `reference_name` e feature `Voice SDR`.
+  - Regra de Faturamento: débito proporcional à duração da chamada a uma taxa de 10 créditos por minuto (`minutes = max(1, int(duration / 60))`).
+  - Sincronização automática do saldo compartilhado no `Deveron AI Workspace Balance` mesmo quando inserido diretamente via `frappe.get_doc({...}).insert()`.
+- **Webhook de Ingestão (`crm/crm/integrations/voice_sdr.py`):**
+  - Endpoint `@frappe.whitelist(allow_guest=True) receive_sdr_call_result()` que persiste o `CRM Call Log`, atualiza o `CRM Lead.status` para `"Qualificado"` (quando aplicável) e registra o débito correspondente no `Deveron AI Credit Ledger`.
+- **Sidecar Pipecat (`deveron-voice-sdr/`):**
+  - `bot.py`: Aplicação FastAPI WebSocket com pipeline streaming Pipecat, suporte a chamadas TwiML (`POST /twiml`), streaming de áudio bidirecional (`/ws/voice`), extração de `CallResultPayload` e webhook dispatcher para o CRM com modo mock automático para ambientes de teste.
+  - `Dockerfile`, `requirements.txt`, `.env.example`.
+- **Testes Automatizados:**
+  - `crm/crm/integrations/tests/test_voice_sdr.py` (4/4 testes aprovados cobrindo fluxo completo, chamada sub-minuto, validação de payload/assinatura e snippets de inserção direta do CRM Call Log e Credit Ledger).
 
 ---
+
 
 ## 5. Diretivas para o Agente de IA
 

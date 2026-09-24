@@ -12,12 +12,16 @@
   "feature",
   "operation_type",
   "credits",
+  "credits_debited",
+  "credits_credited",
   "balance_after",
   "workspace_balance_after",
   "section_break_usage",
   "tokens_prompt",
   "tokens_completion",
   "column_break_usage",
+  "reference_doctype",
+  "reference_name",
   "reference_session",
   "reference_run",
   "section_break_details",
@@ -26,11 +30,10 @@
  "fields": [
   {
    "fieldname": "user",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "User / Cadeira",
-   "options": "User",
    "reqd": 1
   },
   {
@@ -60,7 +63,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Feature",
-   "options": "Chat\nTool Execution\nSemantic Search (RAG)\nProposal Generation\nLead Enrichment\nCredit Recharge\nCustom\nOther",
+   "options": "Chat\nTool Execution\nSemantic Search (RAG)\nProposal Generation\nLead Enrichment\nVoice SDR\nCredit Recharge\nCustom\nOther",
    "reqd": 1
   },
   {
@@ -139,6 +142,31 @@
    "fieldname": "details",
    "fieldtype": "Small Text",
    "label": "Details"
+  },
+  {
+   "default": "0",
+   "fieldname": "credits_debited",
+   "fieldtype": "Float",
+   "label": "Credits Debited",
+   "precision": "2"
+  },
+  {
+   "default": "0",
+   "fieldname": "credits_credited",
+   "fieldtype": "Float",
+   "label": "Credits Credited",
+   "precision": "2"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "label": "Reference Name"
   }
  ],
  "modified": "2026-09-21 00:00:00",
