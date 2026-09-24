@@ -40,11 +40,14 @@ wsl -e bash -c "cd /home/bernardo/frappe/my-bench/sites && ../env/bin/python -m 
 
 # Rodar migrações quando novos doctypes forem adicionados
 wsl -e bash -c "cd /home/bernardo/frappe/my-bench/sites && ../env/bin/python -m frappe.utils.bench_helper frappe --site deveron.localhost migrate"
+
+# Executar testes unitários do ledger
+wsl -e bash -c "cd /home/bernardo/frappe/my-bench && bench --site deveron.localhost run-tests --module flow.tests.test_ai_credit_ledger"
 ```
 
 ---
 
-## 3. Arquitetura do Sistema
+## 3. Arquitetura do Sistema e Divisão de Responsabilidades
 
 ```mermaid
 graph TD
@@ -53,9 +56,24 @@ graph TD
     C -->|Lê Doc Ativo, Notas, Comentários, Tarefas| D[Frappe CRM DocTypes]
     B -->|Tool Calling| E[Builtin Tools & CRM Tools]
     E -->|Normalização de Campos e Status PT-BR| D
-    B -->|Rastreamento de Tokens| F[Deveron AI Credit Ledger]
-    F -->|Atualização com Optimistic Lock| G[Deveron AI Workspace Balance]
+    B -->|Decorator @consume_ai_credits| F[flow.ledger.credits]
+    F -->|Row-level Lock: SELECT ... FOR UPDATE| G[Deveron AI Workspace Balance]
+    F -->|Auditoria de Uso e Tokens| H[Deveron AI Credit Ledger]
 ```
+
+### Divisão Copilot vs CRM (Usage-Based Metering):
+- **No Copilot (`copilot_crm` / `flow`)**:
+  - Camada técnica e de governança de custos de IA (*Circuit-Breaker & Metering*).
+  - Decorator `@consume_ai_credits(cost=X)`.
+  - Controle atômico no banco e bloqueio estrito em caso de saldo zerado.
+  - Registro de auditoria (`Deveron AI Credit Ledger`).
+- **No CRM (Negócio / Faturamento Comercial)**:
+  - Gestão de contratos, planos (Starter, Pro, Enterprise) e faturamento por cadeira.
+  - Na contratação ou renovação de ciclo, o CRM chama a API do Copilot para recarregar o workspace:
+    ```python
+    from flow.ledger import recharge_workspace_credits
+    recharge_workspace_credits(workspace=company.workspace_id, amount=5000.0)
+    ```
 
 ---
 
@@ -95,12 +113,26 @@ graph TD
   - `manage_crm_task`: *"Gerenciando Tarefas"*.
 - Tratamento de reconexão e destravamento de sessões com falha (`recover_session`).
 
-### E. Módulo de Créditos de IA (`flow/ledger/` & DocTypes)
+### E. Módulo de Créditos de IA e Faturamento por Cadeira (Feature 4.2)
 - **DocTypes Criados:**
-  - `Deveron AI Credit Ledger`: Livro-razão imutável de transações (entradas de recarga, saídas por consumo de tokens prompt/completion, modelo utilizado, sessão, usuário e workspace).
-  - `Deveron AI Workspace Balance`: Saldo consolidado por workspace/empresa com controle de concorrência (`modified` timestamp check).
-  - `Copilot AI Settings`: Configurações globais de precificação de tokens e créditos padrão para novos workspaces.
-- **Testes Unitários:** `flow/tests/test_ai_credit_ledger.py` cobrindo adição de créditos, débito concorrente e validação de saldo insuficiente.
+  - `Deveron AI Credit Ledger` (`flow/flow/doctype/deveron_ai_credit_ledger/`):
+    - Tabela de auditoria imutável com campos: `user` (cadeira), `workspace` (pool compartilhado), `posting_datetime`, `feature`, `credits` (delta), `balance_after` (saldo da cadeira), `workspace_balance_after` (saldo do workspace), `tokens_prompt`, `tokens_completion`, referências de sessão e execução.
+  - `Deveron AI Workspace Balance` (`flow/flow/doctype/deveron_ai_workspace_balance/`):
+    - Registro de saldo compartilhado por workspace (`credit_balance`, `total_consumed`, `status`, `last_recharge`, `last_deduction`).
+  - `Copilot AI Settings` (`flow/flow/doctype/copilot_ai_settings/`):
+    - Configurações globais: `default_workspace_credits` (1000.0), `workspace_credit_balance`, `cost_per_chat`, `cost_per_tool`, `cost_per_rag`, `cost_per_proposal`.
+- **Motor de Dedução Atômica (`flow/ledger/credits.py`):**
+  - **Dedução atômica via Row-Level Lock:** `SELECT ... FOR UPDATE` no registro de `Deveron AI Workspace Balance` previne condições de corrida e saldos negativos sob concorrência.
+  - **Bloqueio em Saldo Zero:** Se `credit_balance <= 0` ou `credit_balance < cost`, interrompe com `frappe.PermissionError`.
+  - **Commit Imediato:** `frappe.db.commit()` é disparado logo após a dedução para liberar travas no banco antes de chamadas de LLM lentas.
+  - **Estorno Automático (`refund_credits_atomically`):** Se a chamada externa do provedor de IA falhar com exceção, os créditos debitados são automaticamente devolvidos ao saldo do workspace.
+  - **Decorator Flexível `@consume_ai_credits`:**
+    - Suporta `@consume_ai_credits(cost=2.0)`
+    - Suporta `@consume_ai_credits(cost=1.5, feature="rag")`
+    - Suporta `@consume_ai_credits(feature="chat")` (retrocompatibilidade)
+    - Suporta custos dinâmicos via callable e resolução de `workspace`.
+- **Suíte de Testes:**
+  - `flow/tests/test_ai_credit_ledger.py` (7/7 testes aprovados cobrindo inicialização, dedução atômica, bloqueio em saldo zero, decorators, estorno e recargas).
 
 ---
 
@@ -125,5 +157,8 @@ Ao atuar neste projeto, siga estritamente estas diretivas:
 4. **Tratamento de I18N / Português:**
    - O usuário interage em Português. Sempre certifique-se de que termos de negócio do CRM (ex: "Oportunidade" $\leftrightarrow$ `CRM Deal`, "Lead" $\leftrightarrow$ `CRM Lead`, "Contato" $\leftrightarrow$ `Contact`, "Novo" $\leftrightarrow$ `New`, "Ganho" $\leftrightarrow$ `Won`) sejam transparentemente mapeados pelas ferramentas de backend.
 
-5. **Integridade de Documentação:**
+5. **Sincronização Obrigatória com WSL:**
+   - Sempre que arquivos forem criados ou alterados no repositório Windows (`c:\Users\berna\repos\copilot_crm`), garanta que o espelhamento para `\\wsl.localhost\Ubuntu\home\bernardo\frappe\my-bench\apps\flow` seja realizado e, se houver alteração de DocTypes ou DB, rode `bench migrate` e `clear-cache`.
+
+6. **Integridade de Documentação:**
    - Mantenha este arquivo `AGENTS.md` atualizado sempre que um novo DocType, ferramenta (`tool`) ou ajuste arquitetural for implementado.
