@@ -62,6 +62,7 @@ def _create_ledger_entry(
 	session: str | None = None,
 	run: str | None = None,
 	details: str | None = None,
+	operation_type: str | None = None,
 ) -> None:
 	"""Insert an audit record into Deveron AI Credit Ledger and legacy Copilot Credit Ledger."""
 	now_dt = frappe.utils.now_datetime()
@@ -69,23 +70,23 @@ def _create_ledger_entry(
 	# 1. Primary: Deveron AI Credit Ledger
 	if frappe.db.exists("DocType", "Deveron AI Credit Ledger"):
 		try:
-			doc = frappe.get_doc(
-				{
-					"doctype": "Deveron AI Credit Ledger",
-					"user": user,
-					"workspace": workspace or "default",
-					"posting_datetime": now_dt,
-					"feature": feature,
-					"credits": credits_delta,
-					"balance_after": balance_after,
-					"workspace_balance_after": workspace_balance_after if workspace_balance_after is not None else balance_after,
-					"tokens_prompt": tokens_prompt,
-					"tokens_completion": tokens_completion,
-					"reference_session": session,
-					"reference_run": run,
-					"details": details,
-				}
-			)
+			ledger_dict = {
+				"doctype": "Deveron AI Credit Ledger",
+				"user": user,
+				"workspace": workspace or "default",
+				"posting_datetime": now_dt,
+				"feature": feature,
+				"operation_type": operation_type or feature,
+				"credits": credits_delta,
+				"balance_after": balance_after,
+				"workspace_balance_after": workspace_balance_after if workspace_balance_after is not None else balance_after,
+				"tokens_prompt": tokens_prompt,
+				"tokens_completion": tokens_completion,
+				"reference_session": session,
+				"reference_run": run,
+				"details": details,
+			}
+			doc = frappe.get_doc(ledger_dict)
 			doc.insert(ignore_permissions=True)
 		except Exception as e:
 			frappe.log_error(title="Erro inserção Deveron AI Credit Ledger", message=str(e))
@@ -259,6 +260,7 @@ def deduct_credits_atomically(
 	details: str | None = None,
 	tokens_prompt: int = 0,
 	tokens_completion: int = 0,
+	operation_type: str | None = None,
 ) -> tuple[float, float]:
 	"""Atomically check and deduct credits from the workspace pool and user balance in the DB.
 
@@ -362,6 +364,7 @@ def deduct_credits_atomically(
 		session=session,
 		run=run,
 		details=details or f"Dedução de serviço {feature}",
+		operation_type=operation_type,
 	)
 
 	# Commit immediately so locks are released before invoking external LLM APIs
@@ -378,6 +381,7 @@ def refund_credits_atomically(
 	session: str | None = None,
 	run: str | None = None,
 	reason: str = "Falha no serviço de IA",
+	operation_type: str | None = None,
 ) -> tuple[float, float]:
 	"""Atomically refund deducted credits back to workspace and user balances upon service failure."""
 	workspace = workspace or "default"
@@ -418,7 +422,7 @@ def refund_credits_atomically(
 
 	_create_ledger_entry(
 		user=user,
-		feature=feature if feature in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation") else "Custom",
+		feature=feature if feature in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment") else "Custom",
 		credits_delta=cost,
 		balance_after=new_user_bal,
 		workspace=workspace,
@@ -426,6 +430,7 @@ def refund_credits_atomically(
 		session=session,
 		run=run,
 		details=f"Estorno de créditos: {reason}",
+		operation_type=operation_type,
 	)
 
 	frappe.db.commit()
@@ -511,22 +516,25 @@ def consume_ai_credits(
 	cost: float | Callable | None = None,
 	feature: str = "chat",
 	workspace: str | None = None,
+	operation_type: str | None = None,
+	**kwargs,
 ):
 	"""Decorator to enforce RBAC credit governance with atomic database deduction.
 
 	Usage:
 	    @consume_ai_credits(cost=2.0)
 	    @consume_ai_credits(cost=1.5, feature="rag")
+	    @consume_ai_credits(cost=1, operation_type="Lead Enrichment")
 	    @consume_ai_credits(feature="chat")
 	    @consume_ai_credits
 	"""
 	# Handle bare decorator: @consume_ai_credits
-	if callable(cost) and feature == "chat" and workspace is None and not isinstance(cost, (int, float)):
+	if callable(cost) and feature == "chat" and workspace is None and operation_type is None and not isinstance(cost, (int, float)):
 		target_func = cost
-		return _build_consume_wrapper(target_func, cost=None, feature="chat", workspace=None)
+		return _build_consume_wrapper(target_func, cost=None, feature="chat", workspace=None, operation_type=None)
 
 	def decorator(func: Callable):
-		return _build_consume_wrapper(func, cost=cost, feature=feature, workspace=workspace)
+		return _build_consume_wrapper(func, cost=cost, feature=feature, workspace=workspace, operation_type=operation_type)
 
 	return decorator
 
@@ -536,6 +544,7 @@ def _build_consume_wrapper(
 	cost: float | Callable | None = None,
 	feature: str = "chat",
 	workspace: str | None = None,
+	operation_type: str | None = None,
 ) -> Callable:
 	"""Construct wrapper with atomic DB deduction and blocking on zero workspace balance."""
 
@@ -550,20 +559,31 @@ def _build_consume_wrapper(
 		)
 		user = getattr(frappe.session, "user", "Administrator")
 
+		# If operation_type is provided and feature is default, align feature
+		effective_feature = feature
+		if operation_type and (feature == "chat" or not feature):
+			effective_feature = operation_type
+
 		# Resolve cost
 		if callable(cost):
 			call_cost = float(cost(*args, **kwargs))
 		elif cost is not None:
 			call_cost = float(cost)
 		else:
-			call_cost = get_feature_cost(feature)
+			call_cost = get_feature_cost(effective_feature)
 
 		session_id = kwargs.get("session") or kwargs.get("session_name")
 		run_id = kwargs.get("run") or kwargs.get("run_name")
 
 		# Format feature label
-		feature_label = feature.capitalize() if feature != "rag" else "Semantic Search (RAG)"
-		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Credit Recharge"):
+		if effective_feature in ("Lead Enrichment", "Lead enrichment", "lead_enrichment"):
+			feature_label = "Lead Enrichment"
+		elif effective_feature == "rag":
+			feature_label = "Semantic Search (RAG)"
+		else:
+			feature_label = effective_feature.capitalize()
+
+		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Credit Recharge"):
 			feature_label = "Custom"
 
 		# Atomic check & deduction in database (throws PermissionError if workspace balance is zero)
@@ -574,7 +594,8 @@ def _build_consume_wrapper(
 			workspace=actual_workspace,
 			session=session_id,
 			run=run_id,
-			details=f"Execução de {feature} ({call_cost:.2f} créditos)",
+			details=f"Execução de {effective_feature} ({call_cost:.2f} créditos)",
+			operation_type=operation_type or feature_label,
 		)
 
 		try:
@@ -591,6 +612,7 @@ def _build_consume_wrapper(
 					session=session_id,
 					run=run_id,
 					reason=f"Erro durante execução: {exc}",
+					operation_type=operation_type or feature_label,
 				)
 			except Exception:
 				pass
