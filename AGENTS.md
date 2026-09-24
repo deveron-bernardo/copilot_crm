@@ -147,6 +147,20 @@ graph TD
 - **Testes Unitários:**
   - `crm/crm/enrichment/tests/test_enrichment.py` (6/6 testes aprovados cobrindo sanitização, mocks de clientes, fluxo completo com auditoria de crédito e hook `after_insert`).
 
+### G. Automação Autônoma do Kanban com CrewAI — Task 5.2
+- **Mecanismo:** Rotina agendada (Cron `*/30 * * * *` em `scheduler_events`) onde um agente supervisor (`DealEvaluator`) audita a inatividade das negociações ativas via `Communication` / `creation`, calcula o `Deal Health Score` e realiza transições autônomas para cards estagnados.
+- **Campos adicionados ao CRM Deal (`crm_deal.json`):**
+  - `health_score` (Percent: 0–100%), `health_status` (`Good`, `Warning`, `Critical`), `stagnation_days` (Int: dias sem interação), `last_autonomous_action` (Datetime).
+- **DocType CRM Note criado (`crm_note.json`):**
+  - Registra notas explicativas auditáveis e sincroniza com `FCRM Note` para visibilidade instantânea na Activity Timeline nativa do Frappe CRM.
+- **Agente Avaliador & Supervisor (`crm/crm/agents/deal_evaluator.py` & `crm/crm/tasks/kanban_supervisor.py`):**
+  - Regra de Estagnação: Se `days_inactive >= 14` e `deal.status != "Esfriou"`, move o deal para `"Esfriou"`, define `health_status = "Critical"` e `health_score = 20`, e insere uma `CRM Note` auditável explicitando a regra aplicada.
+  - Para negociações ativas recentes, calcula dinamicamente o `health_score` (Good/Warning) e atualiza `stagnation_days`.
+- **Frontend Kanban (`Deals.vue`):**
+  - Adicionado badge visual customizado com cores semânticas (`Good` $\rightarrow$ Verde, `Warning` $\rightarrow$ Âmbar, `Critical` $\rightarrow$ Vermelho) na exibição de cards do Kanban.
+- **Testes Unitários:**
+  - `crm/crm/tasks/tests/test_kanban_supervisor.py` (4/4 testes aprovados cobrindo cálculo de inatividade, transição de estagnação com nota explicativa e proteção para negócios Won/Lost).
+
 ---
 
 ## 5. Diretivas para o Agente de IA
