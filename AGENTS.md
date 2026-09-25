@@ -193,6 +193,45 @@ graph TD
 - **Testes Automatizados:**
   - `crm/crm/api/tests/test_langflow.py` (7/7 testes aprovados cobrindo autorização, restrição de acesso a guests, validação de campos, disparo em eventos de criação de Lead, bloqueio de fluxos inativos, nós customizados do LangFlow e acionamento manual).
 
+### J. Gateway WhatsApp Híbrido (WABA Oficial + Evolution API) — Task 3.2
+- **Mecanismo:** Suporte duplo de canais de saída e entrada de WhatsApp diretamente na aba de conversa do Lead/Deal:
+  - **Modo WABA Oficial (Meta Cloud API):** Disparos estruturados baseados em templates aprovados pela Meta com parâmetros dinâmicos via `WABA Settings.send_template(...)`.
+  - **Modo Evolution API (QR Code / WhatsApp Web):** Atendimento fluido para mensagens de texto livres, envio de arquivos/áudio sem custos de modelo pago da Meta via `POST {evolution_url}/message/sendText/{instance}`.
+- **DocTypes Criados / Registrados no FCRM:**
+  - `WhatsApp Message` (`whatsapp_message.json` & `.py`): Catálogo histórico completo com campos de direção (`type`/`direction`), `from`, `to`, `message`, `status`, `provider` (`evolution`/`waba`), `template_name`, `template_parameters`, `reference_doctype` e `reference_name`. Dispara evento em tempo real no `after_insert`/`on_update`.
+  - `WhatsApp Template` (`whatsapp_template.json` & `.py`): Cadastro de templates oficiais aprovados com parâmetros variáveis.
+  - `WABA Settings` (`waba_settings.json` & `.py`): Configurações e client de envio Meta Graph API (`/v20.0/{phone_number_id}/messages`).
+  - `Deveron Settings` (`deveron_settings.json` & `.py`): Configurações de endpoint da Evolution API (`evolution_url`, `evolution_instance`, `evolution_api_key`).
+  - `WhatsApp Settings` (`whatsapp_settings.json` & `.py`): Configurações globais de integração WhatsApp no CRM.
+- **Roteador Híbrido de Envio (`crm/crm/whatsapp/router.py`):**
+  - Endpoint `@frappe.whitelist() send_message(reference_doctype, reference_name, to_number, message, template_name, template_args, provider)`:
+    - Normaliza e sanitiza número de telefone.
+    - Se `provider == "waba"` e `template_name`: despacha via Meta Cloud API (`WABA Settings`).
+    - Caso contrário: despacha via Evolution API.
+    - Persiste o registro de `WhatsApp Message` com status `Sent`.
+    - Persiste uma `Communication` com `communication_medium="WhatsApp"`, refletindo instantaneamente na Activity Timeline nativa do Frappe CRM.
+- **Webhook Unificado de Entrada (`crm/crm/whatsapp/webhook.py`):**
+  - Endpoint `@frappe.whitelist(allow_guest=True) receive_message()`:
+    - Processa payloads de entrada tanto da Meta (WABA) quanto da Evolution API (`messages.upsert`).
+    - Trata verificação de desafio da Meta (`hub.challenge` via GET).
+    - Sanitiza o número de telefone de origem (país + DDD + dígitos).
+    - Localiza o `CRM Lead` ou `CRM Deal` correspondente via matching resiliente dos dígitos finais.
+    - Persiste `WhatsApp Message` (`Incoming`) e `Communication` vinculados ao Lead/Deal.
+    - Emite evento WebSocket em tempo real: `frappe.publish_realtime('crm_whatsapp_message', message_data, room=f'crm_{lead_or_deal}')`.
+- **Frontend & Interface de Chat (`crm/frontend/`):**
+  - `crm/frontend/src/components/whatsapp/ChatBox.vue`:
+    - Balões alinhados à direita com fundo Mint Neon Deveron (`bg-emerald-500 text-white`) para mensagens enviadas.
+    - Balões alinhados à esquerda com superfície dark (`bg-card text-foreground`) para mensagens recebidas.
+    - Exibição de status de entrega/leitura (Enviado / Entregue / Lido).
+    - Scroll automático ao enviar ou receber novas mensagens.
+    - Listener Socket.io em tempo real (`$socket.on('crm_whatsapp_message')`) que insere mensagens na conversa em menos de 2 segundos sem recarregar a tela.
+  - `crm/frontend/src/components/whatsapp/TemplateSelectorModal.vue`:
+    - Modal de busca e seleção de templates oficiais WABA aprovados com preenchimento dinâmico de parâmetros (`{{1}}`, `{{2}}`).
+  - `crm/frontend/src/views/lead/LeadWhatsAppTab.vue`:
+    - Tab dedicada para a conversa de WhatsApp no Lead/Deal com checagem de telefone e badges de status de conexão dos gateways.
+- **Testes Automatizados:**
+  - `crm/crm/whatsapp/tests/test_whatsapp_hybrid.py` (5/5 testes aprovados cobrindo envio Evolution, envio WABA com template, resolução de lead por dígitos, webhook Evolution e webhook WABA).
+
 ---
 
 
