@@ -422,7 +422,7 @@ def refund_credits_atomically(
 
 	_create_ledger_entry(
 		user=user,
-		feature=feature if feature in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment") else "Custom",
+		feature=feature if feature in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Voice SDR", "Meeting Transcription", "Docling OCR", "Credit Recharge") else "Custom",
 		credits_delta=cost,
 		balance_after=new_user_bal,
 		workspace=workspace,
@@ -582,12 +582,14 @@ def _build_consume_wrapper(
 			feature_label = "Meeting Transcription"
 		elif effective_feature in ("Voice SDR", "voice_sdr"):
 			feature_label = "Voice SDR"
+		elif effective_feature in ("Docling OCR", "docling_ocr", "Document OCR"):
+			feature_label = "Docling OCR"
 		elif effective_feature == "rag":
 			feature_label = "Semantic Search (RAG)"
 		else:
 			feature_label = effective_feature.capitalize()
 
-		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Voice SDR", "Meeting Transcription", "Credit Recharge"):
+		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Voice SDR", "Meeting Transcription", "Docling OCR", "Credit Recharge"):
 			feature_label = "Custom"
 
 		# Atomic check & deduction in database (throws PermissionError if workspace balance is zero)

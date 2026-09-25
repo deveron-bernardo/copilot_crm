@@ -63,7 +63,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Feature",
-   "options": "Chat\nTool Execution\nSemantic Search (RAG)\nProposal Generation\nLead Enrichment\nVoice SDR\nMeeting Transcription\nCredit Recharge\nCustom\nOther",
+   "options": "Chat\nTool Execution\nSemantic Search (RAG)\nProposal Generation\nLead Enrichment\nVoice SDR\nMeeting Transcription\nDocling OCR\nCredit Recharge\nCustom\nOther",
    "reqd": 1
   },
   {

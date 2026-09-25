@@ -256,6 +256,30 @@ graph TD
 - **Testes Automatizados:**
   - `crm/crm/integrations/tests/test_meetily_transcription.py` (4/4 testes aprovados cobrindo cálculo proporcional de créditos, parsing Faster-Whisper/LLM, webhook Meetily com criação de CRM Note e CRM Task, e resolução de Deal por e-mail).
 
+### L. Ingestão OCR Estruturada de Documentos (Docling) — Task 6.2
+- **Mecanismo:** Pipeline de OCR visual estruturado para upload de ordens de compra ou propostas comerciais em PDF diretamente na aba de Dados do `CRM Deal`, utilizando o Docling para reconhecimento visual de layouts complexos, extração de tabelas de produtos e preenchimento automático das linhas da child table `CRM Products` com recálculo instantâneo de totais e valor da negociação (`deal_value`).
+- **Doctypes Envolvidos:**
+  - `CRM Deal`: Adicionados métodos `calculate_totals()` e `import_products_from_items(items, clear_existing)`.
+  - `CRM Products`: Child table preenchida com `product_code`, `product_name`, `qty`, `rate`, `amount`, `discount_amount` e `net_amount`. Vinculação resiliente com catálogo `CRM Product`.
+  - `Deveron AI Credit Ledger`: Auditoria de consumo de créditos de OCR (`Docling OCR`).
+- **Serviço de Parser e Backend (`crm/crm/integrations/docling_client.py`):**
+  - `parse_currency_to_float(val)`: Converte padrões monetários brasileiros (ex: `"R$ 1.500,00"` $\rightarrow$ `1500.0`, `"1.250,50"` $\rightarrow$ `1250.50`, `"10"` $\rightarrow$ `10.0`) e internacionais em `float`.
+  - `extract_product_rows(table_data)`: Mapeamento flexível de colunas por palavras-chave (`SKU`, `Código`, `Descrição`, `Produto`, `Qtd`, `Preço Unitário`, `Valor`, `Total`) e descarte de linhas de sumário/total geral.
+  - `parse_document_tables(file_path_or_url)`: Despacha para o sidecar container Docling (`DOCLING_URL` ou `http://localhost:5001/v1/document/parse`) com fallback local resiliente (`pdfplumber` nativo).
+  - `@frappe.whitelist() parse_pdf_and_import(deal_name, file_url, clear_existing)`: Endpoint que orquestra a leitura, atualiza as linhas do Deal, recalcula os totais e registra nota na timeline.
+- **Faturamento e Governança de IA:**
+  - Decorator `@consume_ai_credits(cost=calculate_docling_cost, operation_type="Docling OCR", feature="Docling OCR")`.
+  - Cobrança de 1 crédito de IA por página processada no documento (`pages = get_pdf_page_count(file_url)`).
+- **Sidecar Container Docling (`docling/server.py` & `docling/Dockerfile`):**
+  - Servidor FastAPI com endpoints `POST /v1/document/parse` e `GET /health` executando `DocumentConverter` do Docling e exportando matrizes estruturadas em JSON.
+- **Componente Frontend (`crm/frontend/src/components/deal/ImportPDFButton.vue` & `DataFields.vue`):**
+  - Botão *"Importar Itens via PDF"* integrado na aba de Dados do Deal.
+  - Dialog com `FileUploader` restrito a arquivos `.pdf` e opção de substituição de linhas existentes.
+  - Skeleton Loader com shimmer animation simulando o grid de produtos durante o parsing do Docling.
+  - Atualização reativa da tabela e toast de sucesso após a importação.
+- **Testes Automatizados:**
+  - `crm/crm/integrations/tests/test_docling_parser.py` (7/7 testes aprovados cobrindo conversão de moedas, extração de tabelas com cabeçalhos variados, `calculate_totals`, `import_products_from_items`, contagem de páginas/créditos e fluxo ponta a ponta com auditoria no `Deveron AI Credit Ledger`).
+
 ---
 
 
