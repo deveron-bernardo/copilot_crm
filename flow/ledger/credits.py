@@ -578,12 +578,16 @@ def _build_consume_wrapper(
 		# Format feature label
 		if effective_feature in ("Lead Enrichment", "Lead enrichment", "lead_enrichment"):
 			feature_label = "Lead Enrichment"
+		elif effective_feature in ("Meeting Transcription", "meeting_transcription"):
+			feature_label = "Meeting Transcription"
+		elif effective_feature in ("Voice SDR", "voice_sdr"):
+			feature_label = "Voice SDR"
 		elif effective_feature == "rag":
 			feature_label = "Semantic Search (RAG)"
 		else:
 			feature_label = effective_feature.capitalize()
 
-		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Credit Recharge"):
+		if feature_label not in ("Chat", "Tool Execution", "Semantic Search (RAG)", "Proposal Generation", "Lead Enrichment", "Voice SDR", "Meeting Transcription", "Credit Recharge"):
 			feature_label = "Custom"
 
 		# Atomic check & deduction in database (throws PermissionError if workspace balance is zero)

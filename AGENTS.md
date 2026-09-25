@@ -232,6 +232,30 @@ graph TD
 - **Testes Automatizados:**
   - `crm/crm/whatsapp/tests/test_whatsapp_hybrid.py` (5/5 testes aprovados cobrindo envio Evolution, envio WABA com template, resolução de lead por dígitos, webhook Evolution e webhook WABA).
 
+### K. Transcrição de Reuniões Self-Hosted (Meetily + Faster-Whisper) — Task 6.1
+- **Mecanismo:** Pipeline assíncrono para recebimento de gravações de plataformas de vídeo (Meetily, Google Meet, Zoom, Teams), transcrição de áudio em container dedicado Faster-Whisper (pt-BR, `large-v3`/`medium`), e sumarização estruturada via LLM com injeção automática de notas e tarefas acionáveis no `CRM Deal`.
+- **DocType Criado (`crm/crm/fcrm/doctype/crm_meeting_recording/`):**
+  - `CRM Meeting Recording`: Tabela para auditoria e controle das gravações (`title`, `deal`, `lead`, `status` [Pending/Processing/Completed/Failed], `platform`, `meeting_url`, `audio_url`, `attendee_email`, `duration_seconds`, `transcript`, `summary`, `action_items`, `note`, `tasks_created`, `error_message`). Emite evento realtime `crm_meeting_recording_updated`.
+- **Ingestão e Despacho Assíncrono (`crm/crm/integrations/meetily.py`):**
+  - Endpoint `@frappe.whitelist(allow_guest=True) receive_meeting_recording()`:
+    - Recebe dados e gravações de reuniões.
+    - Localiza a negociação (`CRM Deal`) pelo e-mail do participante (`resolve_deal_from_email`) em buscas combinadas no Deal, Lead vinculado ou Contact.
+    - Cria o registro no `CRM Meeting Recording` e enfileira o processamento em background com `frappe.enqueue("crm.crm.utils.transcription_pipeline.process_meeting_transcription", queue="default", recording_name=...)`.
+- **Pipeline de Transcrição e LLM (`crm/crm/utils/transcription_pipeline.py`):**
+  - `call_faster_whisper(audio_source, duration_seconds)`: Consulta o container do Faster-Whisper (`FASTER_WHISPER_URL` ou `http://localhost:8000/transcribe`) com fallback defensivo para transcrições em pt-BR.
+  - `extract_insights_with_llm(transcript, title)`: Extrai Resumo Executivo em Markdown e array estruturado de Próximos Passos com prioridades e prazos relativos em dias.
+  - **Persistência no CRM:**
+    - Cria `CRM Note` vinculado ao Deal contendo o Resumo Executivo e Principais Acordos.
+    - Cria registros de `CRM Task` com `status="Todo"`, atribuídos ao `deal_owner`, com data de vencimento calculada a partir de `days_due`.
+    - Atualiza `CRM Meeting Recording` com status `Completed`, texto integral e contagem de tarefas geradas.
+- **Faturamento e Governança de IA:**
+  - Decorator `@consume_ai_credits(cost=calculate_transcription_cost, operation_type="Meeting Transcription", feature="Meeting Transcription")`.
+  - Cobrança baseada na duração do áudio: 1 crédito de IA por minuto transcrito (`minutes = max(1, int((duration_seconds + 59) // 60))`), com auditoria no `Deveron AI Credit Ledger`.
+- **Sidecar Faster-Whisper (`faster-whisper/server.py`):**
+  - Servidor FastAPI com endpoints `POST /transcribe` e `POST /v1/audio/transcriptions` carregando o modelo Whisper via CTranslate2.
+- **Testes Automatizados:**
+  - `crm/crm/integrations/tests/test_meetily_transcription.py` (4/4 testes aprovados cobrindo cálculo proporcional de créditos, parsing Faster-Whisper/LLM, webhook Meetily com criação de CRM Note e CRM Task, e resolução de Deal por e-mail).
+
 ---
 
 
