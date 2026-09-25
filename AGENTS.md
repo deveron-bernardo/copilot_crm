@@ -176,9 +176,25 @@ graph TD
   - `bot.py`: Aplicação FastAPI WebSocket com pipeline streaming Pipecat, suporte a chamadas TwiML (`POST /twiml`), streaming de áudio bidirecional (`/ws/voice`), extração de `CallResultPayload` e webhook dispatcher para o CRM com modo mock automático para ambientes de teste.
   - `Dockerfile`, `requirements.txt`, `.env.example`.
 - **Testes Automatizados:**
-  - `crm/crm/integrations/tests/test_voice_sdr.py` (4/4 testes aprovados cobrindo fluxo completo, chamada sub-minuto, validação de payload/assinatura e snippets de inserção direta do CRM Call Log e Credit Ledger).
+### I. Canvas Visual No-Code (LangFlow Integrado) — Task 5.4
+- **Mecanismo:** Integração visual de orquestração no-code embutindo o editor LangFlow diretamente na interface do Deveron CRM via iframe autenticado com SSO/Token temporário e nós customizados bidirecionais.
+- **DocType Criado (`crm/crm/fcrm/doctype/deveron_automation_flow/`):**
+  - `Deveron Automation Flow`: Tabela de automações visuais (`title`, `status` [Draft/Active/Disabled], `trigger_doctype`, `trigger_event`, `webhook_url`, `langflow_flow_id`, `api_key`, `trigger_count`, `last_triggered`, `last_error`).
+- **Nós Customizados Deveron para LangFlow (`langflow/components/deveron_crm_node.py`):**
+  - `DeveronTriggerNode`: Escuta webhooks de criação/atualização de `CRM Lead` ou `CRM Deal`, valida filtros de evento e extrai dados normalizados (`lead_name`, `email`, `deal_name`, status).
+  - `DeveronActionNode`: Executa ações reais na REST API do Frappe autenticadas via API Key (`POST /api/resource/CRM Note`, `PATCH /api/resource/{doctype}/{id}` para atualizar status, ou `POST /api/resource/CRM Task`).
+- **Disparador de Eventos & API Backend (`crm/crm/api/langflow.py`):**
+  - `@frappe.whitelist() get_langflow_canvas_url()`: Valida restrição de permissão (`CRM Administrator` ou `System Manager`) e gera URL segura com token SSO temporário (`/?token=...&embed=true&theme=light`).
+  - `trigger_automation_flows()`: Dispara webhooks HTTP POST com assinatura HMAC-SHA256 (`X-Deveron-Signature`) para os endpoints do LangFlow sempre que `Deveron Automation Flow` ativo corresponder ao evento do CRM (`CRM Lead` ou `CRM Deal`).
+  - `@frappe.whitelist() trigger_flow_manually()`: Disparo manual para testes e depuração de fluxos a partir da UI.
+- **Frontend View Administrativa (`crm/frontend/src/views/settings/AutomationCanvasView.vue`):**
+  - Container responsivo com iframe isolado (`allow="clipboard-read; clipboard-write"`), carregamento assíncrono do token e tratamento de permissão restrita.
+  - Registrado nas rotas `/settings/automation-canvas` e `/automation-canvas` em `router.js`.
+- **Testes Automatizados:**
+  - `crm/crm/api/tests/test_langflow.py` (7/7 testes aprovados cobrindo autorização, restrição de acesso a guests, validação de campos, disparo em eventos de criação de Lead, bloqueio de fluxos inativos, nós customizados do LangFlow e acionamento manual).
 
 ---
+
 
 
 ## 5. Diretivas para o Agente de IA
