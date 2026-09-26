@@ -277,8 +277,26 @@ graph TD
   - Dialog com `FileUploader` restrito a arquivos `.pdf` e opção de substituição de linhas existentes.
   - Skeleton Loader com shimmer animation simulando o grid de produtos durante o parsing do Docling.
   - Atualização reativa da tabela e toast de sucesso após a importação.
+### M. Geração de Propostas e Contratos em PDF (print_designer) — Task 6.3
+- **Mecanismo:** Geração de propostas comerciais e contratos profissionais em PDF para `CRM Deal` utilizando o app `print_designer` e o renderizador headless Chromium (`pdf_generator="chrome"`), gerando documentos visuais em alta fidelidade e em menos de 1 segundo (SLA < 2s).
+- **DocTypes e Configurações:**
+  - `Print Format`: Criado o formato `Proposta Comercial Deveron` (`CRM Deal`, `print_format_type="Jinja"`, `pdf_generator="chrome"`).
+  - `CRM Deal` & `CRM Products`: Mapeamento das informações do cliente (`doc.organization_name`, `doc.contacts`, `doc.email`, `doc.mobile_no`), tabela de produtos (`doc.products`: SKU, descrição, quantidade, preço unitário, desconto percentual, subtotal), totalizações (`doc.deal_value`, `doc.net_total`), termos e cláusulas jurídicas dinâmicas (Objeto, Pagamento, SLA Deveron Enterprise 24/7, LGPD e Validade).
+  - `File`: Vinculação automática do PDF gerado à negociação.
+- **Serviço Backend (`crm/crm/utils/proposal_generator.py`):**
+  - `ensure_proposal_print_format()`: Registra ou atualiza o Print Format customizado no banco de dados.
+  - `render_proposal_html(deal_name)`: Renderiza o template Jinja com tipografia moderna (Google Font `Inter`), layout responsivo, tabela zebrada e assinaturas formais.
+  - `generate_proposal_pdf_bytes(deal_name)`: Invoca `print_designer.pdf_generator.pdf.get_pdf(..., pdf_generator="chrome")` com fallback gracioso.
+  - `@frappe.whitelist() generate_deal_proposal_pdf(deal_name)`: Gera o PDF em runtime, cria o registro `File` público/anexado e retorna `file_url` e `download_url`.
+  - `@frappe.whitelist() send_proposal_via_whatsapp(deal_name, phone)`: Gera o PDF e despacha mensagem formatada com link de download via `crm.whatsapp.router.send_message` (Evolution API).
+  - `@frappe.whitelist() prepare_proposal_email(deal_name)`: Gera o PDF, monta assunto personalizado e corpo de introdução em HTML, retornando o ID do anexo para disparo de e-mail.
+- **Frontend & Ações Rápidas (`crm/frontend/src/views/deal/DealHeader.vue` & `Deal.vue`):**
+  - Dropdown *"Proposta Comercial"* adicionado ao cabeçalho do Deal com opções:
+    - *"Gerar e Baixar PDF"*: Inicia download imediato do arquivo gerado pelo backend.
+    - *"Enviar por WhatsApp"*: Modal com número com DDD, prévia da negociação e envio direto.
+    - *"Enviar por E-mail"*: Modal com campos de destinatário, assunto, corpo editável e card visual do PDF anexado com link de pré-visualização.
 - **Testes Automatizados:**
-  - `crm/crm/integrations/tests/test_docling_parser.py` (7/7 testes aprovados cobrindo conversão de moedas, extração de tabelas com cabeçalhos variados, `calculate_totals`, `import_products_from_items`, contagem de páginas/créditos e fluxo ponta a ponta com auditoria no `Deveron AI Credit Ledger`).
+  - `crm/crm/integrations/tests/test_proposal_generation.py` (6/6 testes aprovados cobrindo cadastro do print format, renderização de Jinja/produtos/cláusulas, performance de geração em <2s [~0.6-0.9s], anexo de File no Deal, envio via WhatsApp e preparação de e-mail).
 
 ---
 
