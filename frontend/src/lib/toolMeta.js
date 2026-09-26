@@ -44,6 +44,8 @@ const LABELS = {
 	add_crm_comment: "Adding Comment",
 	add_crm_note: "Adding Note",
 	manage_crm_task: "Managing Task",
+	enrich_lead_tool: "Enriching Lead",
+	enrich_lead_from_copilot: "Enriching Lead",
 };
 
 export function toolLabel(name) {

@@ -511,6 +511,18 @@ def summarize_call_log(call_log_name: str, auto_create_tasks: bool = False) -> d
 	}
 
 
+@tool
+def enrich_lead_tool(lead_name: str | None = None) -> dict[str, Any]:
+	"""Enriquece os dados cadastrais de um CRM Lead via Receita Federal (CNPJ, CNAE, sócios) e Crawl4AI (web).
+
+	Pode ser chamado informando o nome ou ID do Lead (ex: 'Ambario Corp', 'LEAD-2026-00042') ou sem parâmetros
+	quando o usuário estiver com a tela do Lead aberta no CRM (resolução contextual automática).
+	"""
+	from crm.crm.copilot.tools.lead_tools import enrich_lead_from_copilot
+
+	return enrich_lead_from_copilot(lead_name=lead_name)
+
+
 def build_crm_tools() -> list[Tool]:
 	"""Return the suite of specialized Frappe CRM tools."""
 	return [
@@ -525,4 +537,5 @@ def build_crm_tools() -> list[Tool]:
 		search_company_memory,
 		search_customer_history,
 		summarize_call_log,
+		enrich_lead_tool,
 	]

@@ -317,6 +317,21 @@ graph TD
   - `crm/crm/search/tests/test_vector_sync.py` (5/5 testes aprovados cobrindo sanitização de texto, determinismo de UUID5, normalização L2 de vetores, sincronização de Communications e idempotência de notas sem duplicação de pontos).
   - `crm/crm/copilot/tests/test_rag_tools.py` (4/4 testes aprovados cobrindo respostas a objeções financeiras em <2s [~0.15s], isolamento estrito por `context_deal_id`, proteção RBAC contra vazamento entre vendedores e auditoria de 1.5 créditos no `Deveron AI Credit Ledger`).
 
+### O. Tool Calling: enrich_lead_tool — Sub-Feature 4.1.B
+- **Mecanismo:** Exposição do pipeline assíncrono de enriquecimento cadastral (Scout + Crawl4AI) como ferramenta executável (`enrich_lead_tool` / `enrich_lead_from_copilot`) para o LLM do Copilot, suportando resolução contextual ativa e menção nominal/ID.
+- **Resolução de Contexto Inteligente (`crm/crm/copilot/tools/lead_tools.py`):**
+  - **Comando com Lead explícito:** Identifica por ID direto (`doc.name`), organização, nome do prospect, primeiro nome, e-mail ou CNPJ (`tax_id`) via busca resiliente.
+  - **Comando contextual (Lead implícito):** Consome o documento ativo na tela do usuário via `copilot_context_docname` (injetado pelo Drawer / `useCopilotContext.ts` ou `set_copilot_context`). Se nenhum lead for detectado, retorna mensagem orientando o usuário a abrir a tela ou informar o nome do lead.
+  - **Validação Estrita de RBAC:** Bloqueia a execução com `status="forbidden"` se o usuário solicitante não possuir permissão de escrita (`write`) no Lead correspondente.
+- **Despacho Assíncrono & Background Job:**
+  - Enfileira `crm.crm.enrichment.pipeline.run_lead_enrichment` na fila `default`, com governança de créditos de IA (`@consume_ai_credits(cost=1, operation_type="Lead Enrichment")`).
+  - Atualização em tempo real via WebSocket (`crm_lead_updated`), recarregando os dados na tela e notificando o usuário com score de ICP e dados da Receita Federal.
+- **Frontend & Metadados do Drawer (`flow/tools/crm.py` & `frontend/src/lib/toolMeta.js`):**
+  - Registrado na suíte `build_crm_tools()` do Copilot CRM.
+  - Rótulos visuais de progresso configurados no chat: *"Enriching Lead"* / *"Enriquecendo Lead"*.
+- **Testes Automatizados:**
+  - `crm/crm/copilot/tests/test_lead_tools.py` (7/7 testes aprovados cobrindo resolução por ID, por organização ['Ambario Corp'], por nome de contato, resolução contextual ativa, tratamento de ausência de contexto, bloqueio RBAC para usuários sem permissão e fluxo completo de enriquecimento com preenchimento de campos e score de ICP).
+
 ---
 
 
