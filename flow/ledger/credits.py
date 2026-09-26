@@ -584,7 +584,7 @@ def _build_consume_wrapper(
 			feature_label = "Voice SDR"
 		elif effective_feature in ("Docling OCR", "docling_ocr", "Document OCR"):
 			feature_label = "Docling OCR"
-		elif effective_feature == "rag":
+		elif effective_feature in ("rag", "RAG Search", "rag_search", "Semantic Search (RAG)"):
 			feature_label = "Semantic Search (RAG)"
 		else:
 			feature_label = effective_feature.capitalize()

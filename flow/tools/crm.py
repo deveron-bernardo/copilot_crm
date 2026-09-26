@@ -464,6 +464,22 @@ def search_company_memory(
 
 
 @tool
+def search_customer_history(
+	query: str,
+	context_deal_id: str | None = None,
+	limit: int = 5,
+) -> dict[str, Any]:
+	"""Busca semântica e híbrida (RAG) no histórico de relacionamentos (E-mails, Notas, Transcrições e WhatsApps) no Qdrant.
+
+	Permite ao Copilot responder dúvidas complexas como 'Qual foi a principal objeção financeira levantada pelo cliente na última reunião?'.
+	Se context_deal_id for fornecido, restringe a busca estritamente à negociação indicada.
+	"""
+	from crm.crm.copilot.tools.rag_tools import search_customer_history as crm_rag_search
+
+	return crm_rag_search(query=query, context_deal_id=context_deal_id, limit=limit)
+
+
+@tool
 def summarize_call_log(call_log_name: str, auto_create_tasks: bool = False) -> dict[str, Any]:
 	"""Lê um registro de chamada (CRM Call Log) e sua transcrição/gravação, sintetizando pontos-chave e próximos passos."""
 	if not frappe.has_permission("CRM Call Log", "read", call_log_name):
@@ -507,5 +523,6 @@ def build_crm_tools() -> list[Tool]:
 		send_crm_whatsapp,
 		generate_deal_proposal,
 		search_company_memory,
+		search_customer_history,
 		summarize_call_log,
 	]

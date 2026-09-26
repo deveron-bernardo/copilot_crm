@@ -298,6 +298,25 @@ graph TD
 - **Testes Automatizados:**
   - `crm/crm/integrations/tests/test_proposal_generation.py` (6/6 testes aprovados cobrindo cadastro do print format, renderização de Jinja/produtos/cláusulas, performance de geração em <2s [~0.6-0.9s], anexo de File no Deal, envio via WhatsApp e preparação de e-mail).
 
+### N. Memória Vetorial & Busca Semântica (RAG via Qdrant) — Task 6.4
+- **Mecanismo:** Sincronização contínua e assíncrona da linha do tempo relacional do Frappe (`Communication`, `CRM Note`, `CRM Call Log`, `CRM Meeting Recording`, `WhatsApp Message`) com o banco vetorial **Qdrant** (coleção `deveron_timeline`), disponibilizando ferramenta de busca híbrida (Dense + Sparse / Rerank Léxico) com isolamento rigoroso de RBAC para o Copilot responder perguntas contextuais em menos de 2 segundos.
+- **Sincronização Vetorial e Idempotência (`crm/crm/search/vector_sync.py`):**
+  - Geração de Point ID determinístico via UUID5 (`uuid.uuid5(uuid.NAMESPACE_DNS, f"{doctype}:{docname}")`), garantindo que modificações em notas ou comunicações atualizem o vetor in-place sem duplicar entradas.
+  - Sanitização de texto (`clean_text_content`): remoção de tags HTML, decodificação de entidades e normalização de espaços e pontuações.
+  - Geração de embeddings vetoriais (dimensão 1536) via modelo ativo ou fallback semântico determinístico de alta entropia com normalização L2.
+  - Injeção obrigatória de payload com metadados: `deal_id`, `lead_id`, `organization_name`, `contact_email`, `user_id`, `timestamp`, `doctype_source`, `docname_source`, `title` e `text`.
+  - Hooks em `crm/crm/hooks.py`: `after_insert`, `on_update` e `on_trash` configurados para os DocTypes da Timeline.
+- **Ferramenta Copilot para RAG (`crm/crm/copilot/tools/rag_tools.py` & `flow/tools/crm.py`):**
+  - `@frappe.whitelist() search_customer_history(query, context_deal_id, limit)`:
+    - Se `context_deal_id` for fornecido: valida permissão de leitura no Deal (`frappe.has_permission("CRM Deal", "read", context_deal_id)`) e aplica filtro estrito `{"deal_id": context_deal_id}`.
+    - Se for busca global (`context_deal_id=None`): verifica o perfil do usuário; se não for administrador, injeta filtro restritivo `{"user_id": session_user}` e `{"deal_id": {"$in": allowed_deals}}`, eliminando qualquer possibilidade de vazamento inter-tenant ou inter-vendedores.
+    - Reranking híbrido: combina pontuação de similaridade de cosseno vetorial (peso 0.75) com bônus de sobreposição léxica de termos-chave (peso até 0.35).
+    - Sintetiza resumo estruturado (`context_summary`) formatado para ingestão imediata por modelos de linguagem.
+  - Governança de IA: Integrado ao decorator `@consume_ai_credits(cost=1.5, feature="Semantic Search (RAG)")`, auditando o débito no `Deveron AI Credit Ledger`.
+- **Testes Automatizados:**
+  - `crm/crm/search/tests/test_vector_sync.py` (5/5 testes aprovados cobrindo sanitização de texto, determinismo de UUID5, normalização L2 de vetores, sincronização de Communications e idempotência de notas sem duplicação de pontos).
+  - `crm/crm/copilot/tests/test_rag_tools.py` (4/4 testes aprovados cobrindo respostas a objeções financeiras em <2s [~0.15s], isolamento estrito por `context_deal_id`, proteção RBAC contra vazamento entre vendedores e auditoria de 1.5 créditos no `Deveron AI Credit Ledger`).
+
 ---
 
 
