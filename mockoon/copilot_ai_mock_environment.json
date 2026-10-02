@@ -1,0 +1,640 @@
+{
+  "uuid": "9fabfb1a-c419-43e6-b89d-eb082987c351",
+  "lastMigration": 32,
+  "name": "Deveron Copilot AI Mock",
+  "endpointPrefix": "",
+  "latency": 20,
+  "port": 3001,
+  "hostname": "0.0.0.0",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "f49f8082-c839-4a71-960b-158b9864eba9",
+      "type": "http",
+      "documentation": "OpenAI Chat Completions API (/v1/chat/completions) com suporte a SSE Streaming e Tool Calling",
+      "method": "post",
+      "endpoint": "v1/chat/completions",
+      "responses": [
+        {
+          "uuid": "6ebe3f64-3f95-4f12-9d36-8b8cc62e763c",
+          "body": "data: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Olá! \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Sou o Copilot CRM da Deveron \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"(executando via mock local Mockoon). \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Posso auxiliar na consulta de leads, criação de tarefas, anotações e atualização de negócios.\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":40,\"completion_tokens\":35,\"total_tokens\":75}}\n\ndata: [DONE]\n\n",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "SSE Streaming Response (stream=true)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/event-stream; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "stream",
+              "operator": "equals",
+              "value": "true",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "097ad1b3-8f3b-4fe8-831a-728bb1d741e1",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-task\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_task_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"manage_crm_task\",\n              \"arguments\": \"{\\\"action\\\": \\\"create\\\", \\\"title\\\": \\\"Follow-up comercial com Lead\\\", \\\"status\\\": \\\"Todo\\\", \\\"priority\\\": \\\"Medium\\\", \\\"description\\\": \\\"Tarefa criada automaticamente pelo Copilot CRM em ambiente de desenvolvimento.\\\"}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 60,\n    \"completion_tokens\": 45,\n    \"total_tokens\": 105\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: manage_crm_task",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(tarefa|task|agenda|agendar|follow)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "048d004d-2412-4ab2-87a9-26f60d71a1b3",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-comment\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_comment_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"add_crm_comment\",\n              \"arguments\": \"{\\\"content\\\": \\\"Coment\\\\u00e1rio registrado pelo Copilot CRM: cliente solicitou demonstra\\\\u00e7\\\\u00e3o da plataforma.\\\", \\\"reference_doctype\\\": \\\"CRM Lead\\\", \\\"reference_docname\\\": \\\"CRM-LEAD-2026-00001\\\"}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 55,\n    \"completion_tokens\": 40,\n    \"total_tokens\": 95\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: add_crm_comment",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(coment|comment|timeline|anote)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "70277fca-b5cc-4e7d-a3bc-26f87fbaf030",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-read\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_read_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"read\",\n              \"arguments\": \"{\\\"doctype\\\": \\\"CRM Lead\\\", \\\"fields\\\": [\\\"name\\\", \\\"lead_name\\\", \\\"company_name\\\", \\\"status\\\", \\\"email_id\\\"], \\\"limit\\\": 5}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 50,\n    \"completion_tokens\": 35,\n    \"total_tokens\": 85\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: read",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(listar|buscar|pesquisar|leads|deals|funil)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "64db711e-8c89-4802-a345-77a24de4606d",
+          "body": "{\n  \"id\": \"chatcmpl-mock-default-01\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"Ol\\u00e1! Sou o Copilot CRM em ambiente de desenvolvimento local (Mockoon). Estou pronto para ajudar com seus Leads, Oportunidades (Deals), Tarefas e Contatos do Deveron CRM.\"\n      },\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 35,\n    \"completion_tokens\": 45,\n    \"total_tokens\": 80\n  }\n}",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "Default Chat Completion (Non-Streaming)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "9271f89a-9623-4008-a657-5907c83c33a6",
+      "type": "http",
+      "documentation": "OpenAI Chat Completions API (/chat/completions) sem prefixo v1",
+      "method": "post",
+      "endpoint": "chat/completions",
+      "responses": [
+        {
+          "uuid": "6484419f-6862-4e7e-9966-942b9549050c",
+          "body": "data: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Olá! \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Sou o Copilot CRM da Deveron \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"(executando via mock local Mockoon). \"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Posso auxiliar na consulta de leads, criação de tarefas, anotações e atualização de negócios.\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-mock-sse-01\",\"object\":\"chat.completion.chunk\",\"created\":1740000000,\"model\":\"gpt-4o-mini\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":40,\"completion_tokens\":35,\"total_tokens\":75}}\n\ndata: [DONE]\n\n",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "SSE Streaming Response (stream=true)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/event-stream; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "stream",
+              "operator": "equals",
+              "value": "true",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "14a263ed-2993-46f1-b617-f29259d7a44b",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-task\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_task_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"manage_crm_task\",\n              \"arguments\": \"{\\\"action\\\": \\\"create\\\", \\\"title\\\": \\\"Follow-up comercial com Lead\\\", \\\"status\\\": \\\"Todo\\\", \\\"priority\\\": \\\"Medium\\\", \\\"description\\\": \\\"Tarefa criada automaticamente pelo Copilot CRM em ambiente de desenvolvimento.\\\"}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 60,\n    \"completion_tokens\": 45,\n    \"total_tokens\": 105\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: manage_crm_task",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(tarefa|task|agenda|agendar|follow)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "cd55dba1-d53e-44af-8db3-3121d84b1c88",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-comment\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_comment_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"add_crm_comment\",\n              \"arguments\": \"{\\\"content\\\": \\\"Coment\\\\u00e1rio registrado pelo Copilot CRM: cliente solicitou demonstra\\\\u00e7\\\\u00e3o da plataforma.\\\", \\\"reference_doctype\\\": \\\"CRM Lead\\\", \\\"reference_docname\\\": \\\"CRM-LEAD-2026-00001\\\"}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 55,\n    \"completion_tokens\": 40,\n    \"total_tokens\": 95\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: add_crm_comment",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(coment|comment|timeline|anote)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "21eb2cc0-44c9-4a42-85c6-caa9a977b8ac",
+          "body": "{\n  \"id\": \"chatcmpl-mock-tool-read\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n            \"id\": \"call_mock_read_001\",\n            \"type\": \"function\",\n            \"function\": {\n              \"name\": \"read\",\n              \"arguments\": \"{\\\"doctype\\\": \\\"CRM Lead\\\", \\\"fields\\\": [\\\"name\\\", \\\"lead_name\\\", \\\"company_name\\\", \\\"status\\\", \\\"email_id\\\"], \\\"limit\\\": 5}\"\n            }\n          }\n        ]\n      },\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 50,\n    \"completion_tokens\": 35,\n    \"total_tokens\": 85\n  }\n}",
+          "latency": 50,
+          "statusCode": 200,
+          "label": "Tool Call: read",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "property": "messages",
+              "operator": "regex_match",
+              "value": "(listar|buscar|pesquisar|leads|deals|funil)",
+              "invert": false
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "11b2eacb-9d7d-470d-a0cf-3483d258065c",
+          "body": "{\n  \"id\": \"chatcmpl-mock-default-01\",\n  \"object\": \"chat.completion\",\n  \"created\": 1740000000,\n  \"model\": \"gpt-4o-mini\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"Ol\\u00e1! Sou o Copilot CRM em ambiente de desenvolvimento local (Mockoon). Estou pronto para ajudar com seus Leads, Oportunidades (Deals), Tarefas e Contatos do Deveron CRM.\"\n      },\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 35,\n    \"completion_tokens\": 45,\n    \"total_tokens\": 80\n  }\n}",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "Default Chat Completion (Non-Streaming)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "94a34233-8d5e-439d-bdaa-06a301bf030c",
+      "type": "http",
+      "documentation": "OpenAI Embeddings API (v1/embeddings) gerando vetor de 1536 dimensões",
+      "method": "post",
+      "endpoint": "v1/embeddings",
+      "responses": [
+        {
+          "uuid": "e989ec85-c590-447e-bbb0-9400b6f13a69",
+          "body": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"object\": \"embedding\",\n      \"index\": 0,\n      \"embedding\": [\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035\n      ]\n    }\n  ],\n  \"model\": \"text-embedding-3-small\",\n  \"usage\": {\n    \"prompt_tokens\": 8,\n    \"total_tokens\": 8\n  }\n}",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "Embeddings Vector (1536d)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "6000ca32-a9fd-44ca-ba11-e94712702ddf",
+      "type": "http",
+      "documentation": "OpenAI Embeddings API (embeddings) gerando vetor de 1536 dimensões",
+      "method": "post",
+      "endpoint": "embeddings",
+      "responses": [
+        {
+          "uuid": "40ce8f6e-b653-47cb-9611-cadaaf77bc21",
+          "body": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"object\": \"embedding\",\n      \"index\": 0,\n      \"embedding\": [\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035,\n        0.036,\n        0.037,\n        0.038,\n        0.039,\n        0.04,\n        0.041,\n        0.042,\n        0.043,\n        0.044,\n        0.045,\n        0.046,\n        0.047,\n        0.048,\n        0.049,\n        0.05,\n        0.051,\n        0.052,\n        0.053,\n        0.054,\n        0.055,\n        0.056,\n        0.057,\n        0.058,\n        0.059,\n        0.06,\n        0.061,\n        0.062,\n        0.063,\n        0.064,\n        0.065,\n        0.066,\n        0.067,\n        0.068,\n        0.069,\n        0.07,\n        0.071,\n        0.072,\n        0.073,\n        0.074,\n        0.075,\n        0.076,\n        0.077,\n        0.078,\n        0.079,\n        0.08,\n        0.081,\n        0.082,\n        0.083,\n        0.084,\n        0.085,\n        0.086,\n        0.087,\n        0.088,\n        0.089,\n        0.09,\n        0.091,\n        0.092,\n        0.093,\n        0.094,\n        0.095,\n        0.096,\n        0.097,\n        0.098,\n        0.099,\n        0.0,\n        0.001,\n        0.002,\n        0.003,\n        0.004,\n        0.005,\n        0.006,\n        0.007,\n        0.008,\n        0.009,\n        0.01,\n        0.011,\n        0.012,\n        0.013,\n        0.014,\n        0.015,\n        0.016,\n        0.017,\n        0.018,\n        0.019,\n        0.02,\n        0.021,\n        0.022,\n        0.023,\n        0.024,\n        0.025,\n        0.026,\n        0.027,\n        0.028,\n        0.029,\n        0.03,\n        0.031,\n        0.032,\n        0.033,\n        0.034,\n        0.035\n      ]\n    }\n  ],\n  \"model\": \"text-embedding-3-small\",\n  \"usage\": {\n    \"prompt_tokens\": 8,\n    \"total_tokens\": 8\n  }\n}",
+          "latency": 30,
+          "statusCode": 200,
+          "label": "Embeddings Vector (1536d)",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "6266b7e1-1fb9-43ca-a519-206996022fdb",
+      "type": "http",
+      "documentation": "OpenAI Models API (v1/models)",
+      "method": "get",
+      "endpoint": "v1/models",
+      "responses": [
+        {
+          "uuid": "5a92ce41-15f0-4233-a408-d894d295a576",
+          "body": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"id\": \"gpt-4o-mini\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"gpt-4o\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"openai/gpt-4o-mini\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"claude-3-5-sonnet-20241022\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"text-embedding-3-small\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    }\n  ]\n}",
+          "latency": 10,
+          "statusCode": 200,
+          "label": "Models List",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "31bbf096-2818-40fa-9f17-21185ed95998",
+      "type": "http",
+      "documentation": "OpenAI Models API (models)",
+      "method": "get",
+      "endpoint": "models",
+      "responses": [
+        {
+          "uuid": "b382a7c7-60dd-4dcd-b81b-317d869dc4c1",
+          "body": "{\n  \"object\": \"list\",\n  \"data\": [\n    {\n      \"id\": \"gpt-4o-mini\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"gpt-4o\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"openai/gpt-4o-mini\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"claude-3-5-sonnet-20241022\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    },\n    {\n      \"id\": \"text-embedding-3-small\",\n      \"object\": \"model\",\n      \"created\": 1740000000,\n      \"owned_by\": \"mockoon\"\n    }\n  ]\n}",
+          "latency": 10,
+          "statusCode": 200,
+          "label": "Models List",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "bdd57a9d-0cfb-42f1-81fd-d86cc6886bcd",
+      "type": "http",
+      "documentation": "Healthcheck endpoint (/health)",
+      "method": "get",
+      "endpoint": "health",
+      "responses": [
+        {
+          "uuid": "5ddf6bf1-f01c-47a2-b676-c275b623d80e",
+          "body": "{\n  \"status\": \"healthy\",\n  \"provider\": \"Mockoon\",\n  \"description\": \"Deveron Copilot CRM - AI Provider Mock Environment\",\n  \"port\": 3001,\n  \"endpoints\": [\n    \"/v1/chat/completions\",\n    \"/v1/embeddings\",\n    \"/v1/models\"\n  ]\n}",
+          "latency": 5,
+          "statusCode": 200,
+          "label": "Health Status OK",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "e5e79bbd-2c7e-4c13-92c2-51c98541eec7",
+      "type": "http",
+      "documentation": "Healthcheck endpoint (/)",
+      "method": "get",
+      "endpoint": "",
+      "responses": [
+        {
+          "uuid": "f6a361a5-0f69-40ea-8e96-086dea1cca7c",
+          "body": "{\n  \"status\": \"healthy\",\n  \"provider\": \"Mockoon\",\n  \"description\": \"Deveron Copilot CRM - AI Provider Mock Environment\",\n  \"port\": 3001,\n  \"endpoints\": [\n    \"/v1/chat/completions\",\n    \"/v1/embeddings\",\n    \"/v1/models\"\n  ]\n}",
+          "latency": 5,
+          "statusCode": 200,
+          "label": "Health Status OK",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "f49f8082-c839-4a71-960b-158b9864eba9"
+    },
+    {
+      "type": "route",
+      "uuid": "9271f89a-9623-4008-a657-5907c83c33a6"
+    },
+    {
+      "type": "route",
+      "uuid": "94a34233-8d5e-439d-bdaa-06a301bf030c"
+    },
+    {
+      "type": "route",
+      "uuid": "6000ca32-a9fd-44ca-ba11-e94712702ddf"
+    },
+    {
+      "type": "route",
+      "uuid": "6266b7e1-1fb9-43ca-a519-206996022fdb"
+    },
+    {
+      "type": "route",
+      "uuid": "31bbf096-2818-40fa-9f17-21185ed95998"
+    },
+    {
+      "type": "route",
+      "uuid": "bdd57a9d-0cfb-42f1-81fd-d86cc6886bcd"
+    },
+    {
+      "type": "route",
+      "uuid": "e5e79bbd-2c7e-4c13-92c2-51c98541eec7"
+    }
+  ],
+  "proxyMode": false,
+  "userMtls": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
+  "data": [],
+  "callbacks": []
+}
