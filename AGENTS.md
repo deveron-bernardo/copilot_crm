@@ -330,9 +330,26 @@ graph TD
   - Registrado na suíte `build_crm_tools()` do Copilot CRM.
   - Rótulos visuais de progresso configurados no chat: *"Enriching Lead"* / *"Enriquecendo Lead"*.
 - **Testes Automatizados:**
-  - `crm/crm/copilot/tests/test_lead_tools.py` (7/7 testes aprovados cobrindo resolução por ID, por organização ['Ambario Corp'], por nome de contato, resolução contextual ativa, tratamento de ausência de contexto, bloqueio RBAC para usuários sem permissão e fluxo completo de enriquecimento com preenchimento de campos e score de ICP).
+### P. Consolidação Arquitetural: Monólito Modular no Frappe + 3 Sidecars Especializados
+- **Mecanismo:** Consolidação híbrida pragmática para prevenir o inferno de dependências (*dependency hell*) e simplificar a árvore de desenvolvimento.
+- **Monólito Modular (Frappe Bench):**
+  - **Decisão Copilot CRM:** Mantida a **Opção A** (2 apps nativos limpos: `apps/crm` e `apps/flow`), preservando tabelas do banco, Ledger e configurações sem requerer scripts arriscados de migração de dados.
+  - Absorção das regras de negócio que antes dependiam de repositórios externos (`crewAI` $\rightarrow$ `kanban_supervisor.py`, `Scout` $\rightarrow$ `scout_client.py` com fallback BrasilAPI, `waba_integration` $\rightarrow$ `crm/whatsapp/router.py`).
+- **Motores de IA em Containers (`services/` via `docker-compose.yml`):**
+  - `services/ai_media/`: Servidor FastAPI unificado (`docling` OCR estruturado na rota `/v1/document/parse` + `faster-whisper` transcrição na rota `/transcribe` e `/v1/audio/transcriptions`).
+  - `services/voice_sdr/`: Pipeline streaming Pipecat na porta 8765 para chamadas de voz com Twilio/Deepgram/Cartesia.
+  - `qdrant`: Imagem oficial Rust `qdrant/qdrant:latest` na porta 6333 para RAG vetorial.
+  - `evolution-api`: Imagem oficial Node.js na porta 8080 para WhatsApp QR Code.
+- **Otimização de Hardware:**
+  - `ai-media-engine` opera por padrão em CPU com quantização `WHISPER_COMPUTE_TYPE=int8` (protegendo os núcleos do host).
+  - Suporte a GPU NVIDIA via `deploy.resources.reservations.devices` devidamente documentado no `docker-compose.yml`.
+- **Salvaguarda de Experimentos:**
+  - Arquivo de backup compactado criado em `/home/bernardo/backups/experiments_backup_20261009.tar.gz` (116 MB) contendo `waba_integration`, `meetily` e `Scout`.
+- **Operação Pragmática:**
+  - `docker-compose.yml`, `.env.example` e `Makefile` com comandos padronizados (`make up`, `make dev`, `make migrate`, `make test`, `make sync-bench`).
 
 ---
+
 
 
 
